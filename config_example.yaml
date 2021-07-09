@@ -1,0 +1,8 @@
+plugins: 
+-   plugin_module: inginious_coding_style
+    name: "INGInious Coding Style"
+    enabled:
+        - comments
+        - modularity
+        - structure
+        - idiomaticity
