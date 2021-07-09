@@ -1,5 +1,5 @@
-from typing import Dict, List, Optional, Union
-from pydantic import BaseModel, Field, ValidationError, validator
+from typing import Dict, Optional, Union
+from pydantic import BaseModel, Field, ValidationError
 
 GradesIn = Dict[str, Dict[str, Union[str, int]]]
 
@@ -58,21 +58,3 @@ def _handle_validation_error(grades: GradesIn, error: ValidationError) -> Grades
             if key in l:
                 grades[attr_name].pop(key)
     return grades
-
-
-# style_grade = dict(
-#     comments={"grade": 100},
-#     structure={"grade": 100},
-#     modularity={"grade": 44},
-#     style={"grade": "ø", "comment": "44"},
-# )
-
-# g = get_grade(style_grade)
-# print(g)
-
-# # store grade:
-# def set_custom_value(*args):  # INGInious
-#     pass
-
-
-# set_custom_value("style", g.json())
