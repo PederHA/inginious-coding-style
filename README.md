@@ -10,9 +10,10 @@ pip install inginious-coding-style
 
 ## Configuration
 
-Add the following section to your `configuration.yaml` under the `plugin` key:
+Add the following section to your configuration file:
 
 ```yml
+plugins: 
 -   plugin_module: inginious_coding_style
     name: "INGInious Coding Style"
     enabled:
