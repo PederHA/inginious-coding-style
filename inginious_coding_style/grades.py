@@ -19,9 +19,14 @@ class CodingStyleGrade(BaseModel):
     @property
     def average(self) -> float:
         # Dynamically get grades to accomodate adding/removing grading categories
-        grades = [g for g in self.__dict__.values() if isinstance(g, Grade)]
+        # grades = [g for g in self.__dict__.values() if isinstance(g, Grade)]
+        grades = self.get_grades()
         n = len(grades) or 1  # avoid divison by 0
-        return sum(g.grade for g in grades) / n
+        return sum(g.grade for g in grades.values()) / n
+
+    def get_grades(self) -> Dict[str, Grade]:
+        """Retrieves all defined grades (i.e. not None)."""
+        return {name: g for (name, g) in self.__dict__.items() if isinstance(g, Grade)}
 
 
 ############################################################
