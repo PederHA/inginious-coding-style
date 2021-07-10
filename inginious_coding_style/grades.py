@@ -31,6 +31,14 @@ class CodingStyleGrade(BaseModel):
         """Retrieves all defined grades (i.e. not None)."""
         return {name: g for (name, g) in self.__dict__.items() if isinstance(g, Grade)}
 
+    def dump_dict(self) -> Dict[str, Grade]:
+        """Returns a dict version of itself with None fields excluded."""
+        return self.dict(exclude_none=True)
+
+    def dump_json(self) -> str:
+        """Returns JSON-serialized string with None fields excluded."""
+        return self.json(exclude_none=True)
+
 
 ############################################################
 # This is NOT ideal!
