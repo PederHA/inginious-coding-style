@@ -7,7 +7,7 @@ GradesIn = Dict[str, Dict[str, Union[str, int]]]
 class Grade(BaseModel):
     # NOTE: All attributes NEED default values
     grade: int = Field(ge=0, le=100, default=100)
-    comment: Optional[str] = None
+    feedback: Optional[str] = None
 
 
 class CodingStyleGrade(BaseModel):
@@ -15,6 +15,9 @@ class CodingStyleGrade(BaseModel):
     structure: Optional[Grade] = None
     modularity: Optional[Grade] = None
     idiomaticity: Optional[Grade] = None
+
+    class Config:
+        extra = "allow"  # TODO: find out of this is desired
 
     @property
     def average(self) -> float:
