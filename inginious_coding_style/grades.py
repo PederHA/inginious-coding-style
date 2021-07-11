@@ -36,7 +36,7 @@ class CodingStyleGrade(BaseModel):
         return self.dict(exclude_none=True)
 
     def dump_json(self) -> str:
-        """Returns JSON-serialized string with None fields excluded."""
+        """Returns JSON-serialized string of itself with None fields excluded."""
         return self.json(exclude_none=True)
 
 
