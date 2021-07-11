@@ -1,9 +1,8 @@
 import logging
-import sys
 
+# try to use Python 3.9's cache decorator
+# TODO: test on python3.9
 try:
-    # try to use Python 3.9's cache decorator
-    # TODO: test on python3.9
     from functools import cache  # type: ignore
 except ImportError:
     from functools import lru_cache, partial
@@ -14,7 +13,7 @@ except ImportError:
 @cache()
 def get_logger() -> logging.Logger:
     # We just copy the logging style of INGInious here, because
-    # plugins load before the standard loggers are instantiated.
+    # plugins load before the INGInious logger is instantiated.
     formatter = logging.Formatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
