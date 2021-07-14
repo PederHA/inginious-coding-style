@@ -1,7 +1,7 @@
 from typing import Dict, Optional, Union
 from pydantic import BaseModel, Field, ValidationError
 
-GradesIn = Dict[str, Dict[str, Union[str, int]]]
+from ._types import GradesIn
 
 
 class Grade(BaseModel):
@@ -19,15 +19,19 @@ class CodingStyleGrade(BaseModel):
     class Config:
         extra = "allow"  # TODO: find out of this is desired
 
+    def __bool__(self) -> bool:
+        """Evaluates to true if at least one grade is defined."""
+        return any(g for g in self.grades)
+
     @property
     def average(self) -> float:
         # Dynamically get grades to accomodate adding/removing grading categories
-        # grades = [g for g in self.__dict__.values() if isinstance(g, Grade)]
-        grades = self.get_grades()
+        grades = self.grades
         n = len(grades) or 1  # avoid divison by 0
         return sum(g.grade for g in grades.values()) / n
 
-    def get_grades(self) -> Dict[str, Grade]:
+    @property
+    def grades(self) -> Dict[str, Grade]:
         """Retrieves all defined grades (i.e. not None)."""
         return {name: g for (name, g) in self.__dict__.items() if isinstance(g, Grade)}
 
@@ -45,12 +49,12 @@ class CodingStyleGrade(BaseModel):
 ############################################################
 
 
-def get_grade(grades: GradesIn) -> CodingStyleGrade:
+def get_grades(grades: GradesIn) -> CodingStyleGrade:
     try:
         c = CodingStyleGrade(**grades)
     except ValidationError as e:
         grades = _handle_validation_error(grades, e)
-        return get_grade(
+        return get_grades(
             grades
         )  # could hit recursion limit if this is isn't robust (which it isn't)
     return c
