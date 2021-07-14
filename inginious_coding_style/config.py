@@ -4,6 +4,7 @@ from pydantic.fields import ModelField
 from .logger import get_logger
 from .grades import CodingStyleGrade
 
+# Categories are determined by CodingStyleGrade attribute names
 _categories = list(CodingStyleGrade.schema()["properties"].keys())
 
 
@@ -13,7 +14,7 @@ class PluginConfig(BaseModel):
 
     @validator("enabled", pre=True)
     def validate_enabled_pre(cls, enabled: Any, field: ModelField) -> Any:
-        """Handles empty input without having to declare `enabled` as Optional[]"""
+        """Handles None input value without having to declare `enabled` as Optional[]"""
         if enabled is None:
             return []
         return enabled
@@ -35,4 +36,4 @@ class PluginConfig(BaseModel):
                 f"Falling back on defaults: {_categories}"
             )
             enabled = _categories
-        return enabled
+        return list(set(enabled))  # remove duplicates
