@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+<!-- Include htmx: https://htmx.org/ -->
+<script src="https://unpkg.com/htmx.org@1.5.0"></script>
+
+{% block navbar %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{get_homepath()}}/course/{{course.get_id()}}">{{
+                course.get_name(user_manager.session_language()) }}</a></li>
+        <li class="breadcrumb-item">
+            <a href="{{get_homepath()}}/admin/{{course.get_id()}}" title="{{ _('Administration') }}"
+                data-toggle="tooltip" data-placement="bottom">
+                <i class="fa fa-user-secret"></i>
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{get_homepath()}}/admin/{{course.get_id()}}/students" title="{{ _('Students') }}"
+                data-toggle="tooltip" data-placement="bottom">
+                <i class="fa fa-user"></i>
+            </a>
+        </li>
+        <li class="breadcrumb-item"><a href="{{get_homepath()}}/admin/{{course.get_id()}}/student/{{username}}">{{
+                user_realname }}</a>
+        </li>
+        <li class="breadcrumb-item"><a
+                href="{{get_homepath()}}/admin/{{course.get_id()}}/submissions?users={{username}}&tasks={{task.get_id()}}">{{
+                task.get_name(user_manager.session_language()) }}</a></li>
+        <li class="breadcrumb-item"><a href="{{get_homepath()}}/submission/{{submission._id}}">{{ submission['_id'] |
+                string }}<span class="sr-only">{{ _("(current)")
+                    }}</span></a></li>
+        <li class="breadcrumb-item active"><a href="#"><i class="fa fa-check-square"></i>Coding Style<span
+                    class="sr-only">(current)</span></a></li>
+    </ol>
+</nav>
+{% endblock %}
+
+<!-- Display grading categories -->
+{% block content %}
+    <form method="POST">
+    {% for category in config.enabled %}
+        <h1>{{ category.title() }}</h1>
+        <p>This is a category!</p>
+        <!-- Display grade input -->
+
+        <!-- Check if existing grade already exists  -->
+        {% if grades and grades[category] %}
+            <div id="{{category}}">
+                <label for="{{category}}_grade">Grade:</label>
+                <br>
+                <input type="number" id="{{category}}_grade" name="{{category}}_grade" min="0" max="100" value={{grades[category].grade}}>
+                <br>
+                <label for="{{category}}_feedback">Feedback:</label>
+                <br>
+                <textarea id="{{category}}_feedback" name="{{category}}_feedback" rows="4" cols="50">{% if grades[category].feedback %}{{grades[category].feedback}}{% else %}{% endif %}</textarea>
+                <br><br>
+            </div>
+        {% else %}
+            <!-- ... -->
+        {% endif %}
+    {% endfor %}
+    <button hx-post="/admin/codingstyle/{{submission._id}}">Submit</button>
+    <!-- <input type="submit" value="Submit"> -->
+    </form>
+{% endblock %}
