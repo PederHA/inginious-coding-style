@@ -7,13 +7,13 @@ try:
 except ImportError:
     from functools import lru_cache, partial
 
-    cache = partial(lru_cache, None)
+    cache = partial(lru_cache, None)  # fall back on lru_cache(None)
 
 
 @cache()
 def get_logger() -> logging.Logger:
     # We just copy the logging style of INGInious here, because
-    # plugins load before the INGInious logger is instantiated.
+    # plugins are loaded before the INGInious logger is configured.
     formatter = logging.Formatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )

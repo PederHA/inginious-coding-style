@@ -28,37 +28,90 @@
         <li class="breadcrumb-item"><a href="{{get_homepath()}}/submission/{{submission._id}}">{{ submission['_id'] |
                 string }}<span class="sr-only">{{ _("(current)")
                     }}</span></a></li>
-        <li class="breadcrumb-item active"><a href="#"><i class="fa fa-check-square"></i>Coding Style<span
+        <li class="breadcrumb-item active"><a href="#">Coding Style<span
                     class="sr-only">(current)</span></a></li>
     </ol>
 </nav>
 {% endblock %}
 
 <!-- Display grading categories -->
-{% block content %}
+{% block content %}  
+<div class="container-fluid">
+    <h1 class="card-title"> Coding Style Grading for Submission {{ submission._id }} </h1>
+    <p>Show submission and author info here?</p>
+    <hr/>
+    <div class="form-group">
     <form method="POST">
-    {% for category in config.enabled %}
-        <h1>{{ category.title() }}</h1>
-        <p>This is a category!</p>
-        <!-- Display grade input -->
+    {% for id, grade in grades.grades.items() %}
+    <!-- Create new row every second index -->
+    <!-- Is there a better way to do this? -->
+    {% if loop.index0 % 2 == 0 %}
+        <div class="row m-1">
+    {% endif %}
+    <div class="col-md-5 p-4 mr-5 mb-5 border rounded">
+        <h3>
+            {% if id in config.enabled %}
+                {# prefer showing up-to-date name #}
+                {{ config.enabled[id].name }}
+            {% else %}
+                {# fall back on name stored in existing grade #}
+                {% set disabled = True %}
+                {{ grade.name }} (disabled)
+            {% endif %}
+        </h3>
+        <p>
+            {% if id in config.enabled %}
+                {{ config.enabled[id].description }}
+            {% else %}
+                {{ grade.description }}
+            {% endif %}
+        </p>
 
-        <!-- Check if existing grade already exists  -->
-        {% if grades and grades[category] %}
-            <div id="{{category}}">
-                <label for="{{category}}_grade">Grade:</label>
-                <br>
-                <input type="number" id="{{category}}_grade" name="{{category}}_grade" min="0" max="100" value={{grades[category].grade}}>
-                <br>
-                <label for="{{category}}_feedback">Feedback:</label>
-                <br>
-                <textarea id="{{category}}_feedback" name="{{category}}_feedback" rows="4" cols="50">{% if grades[category].feedback %}{{grades[category].feedback}}{% else %}{% endif %}</textarea>
-                <br><br>
+        <!-- Display grade input -->
+            
+            <label for="{{id}}_grade">Grade:</label>
+            <br>
+            <div class="row">
+                <div class="col-md-2">
+                    <input class="form-control" type="number" id="{{id}}_grade" name="{{id}}_grade" min="0" max="100" value={{grade.grade}} {% if disabled %} readonly {% endif %}>
+                </div>
             </div>
-        {% else %}
-            <!-- ... -->
-        {% endif %}
+            <br>
+            <label for="{{id}}_feedback">Feedback:</label>
+            <br>
+            <textarea class="form-control" id="{{id}}_feedback" name="{{id}}_feedback" rows="4" cols="50" {% if disabled %} readonly {% endif %}>{{ grade.feedback }}</textarea>
+            {% if disabled %}
+                <small>NOTE: This category has been disabled and will not contribute to the submission's grade.</small>
+            {% endif %}
+    </div>
+    <!-- <div class="col-md-1"></div> -->
+    {% if loop.index % 2 == 0 %}
+        </div>
+    {% endif %}
     {% endfor %}
-    <button hx-post="/admin/codingstyle/{{submission._id}}">Submit</button>
+
+    <!-- Display average -->
+    <div class="col-md-12">
+
+    {% if grades %}
+    <h4>Average:</h4>
+    <p>{{grades.get_average(config)}}</p>
+    {% endif %}
+
+    
+
+    <button class="btn btn-primary" hx-post="/admin/codingstyle/{{submission._id}}"><i class="fa fa-save"></i> Submit</button>
     <!-- <input type="submit" value="Submit"> -->
+    </div>
     </form>
+</div>
+</div>
 {% endblock %}
+
+
+{#         <!-- Try to fetch name and description from running config if possible -->
+    {% if config.enabled.get(id) %}
+        </h1>{{ config.enabled[id].name }}</h1>
+    {% else %}
+        
+    {% endif %} #}
