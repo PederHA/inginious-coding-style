@@ -1,31 +1,29 @@
 from __future__ import annotations
 
-from typing import Set, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .config import PluginConfig
 
-from typing import Any, Dict, Optional, Union
+from typing import Dict, Optional, Union
 from pydantic import BaseModel, Field, validator
 
 from ._types import GradesIn
 
 
-class BaseGrade(BaseModel):
-    """Represents a grade given to a submission."""
-
-    # NOTE: All attributes NEED default values
-    id: str
-    grade: int = Field(ge=0, le=100, default=100)
-    feedback: str = Field("", max_length=5000)  # prevent unbounded text input
+class Grade(BaseModel):
+    grade: int = Field(default=100, ge=0, le=100)
+    feedback: str = Field(default="", max_length=5000)  # prevent unbounded text input
 
 
-class GradingCategory(BaseGrade):
-    """Represents grading category (including grade and feedback)."""
+class GradingCategory(BaseModel):
+    """Represents a grading category."""
 
     id: str  # Key data is stored under
     name: str
     description: str
+    grade: int = Field(default=100, ge=0, le=100)
+    feedback: str = Field(default="", max_length=5000)  # prevent unbounded text input
 
     @validator("name", pre=True)
     def handle_missing_name(cls, value: Optional[str], values: Dict[str, str]) -> str:
@@ -33,32 +31,6 @@ class GradingCategory(BaseGrade):
         if value is None:
             return values["id"].title()
         return value
-
-
-class CommentsGrade(GradingCategory):
-    id: str = "comments"
-    name: str = "Comments"
-    description: str = "Use of comments."
-
-
-class ModularityGrade(GradingCategory):
-    id: str = "modularity"
-    name: str = "Modularity"
-    description: str = (
-        "Modularity of the code, i.e. appropriate use of functions and encapsulation."
-    )
-
-
-class StructureGrade(GradingCategory):
-    id: str = "structure"
-    name: str = "Structure"
-    description: str = "The quality of the code's structure, i.e. comprehensible variable names, nesting, and program flow (????)."
-
-
-class IdiomaticityGrade(GradingCategory):
-    id: str = "idiomaticity"
-    name: str = "Idiomaticiy"
-    description: str = "How idiomatic the code is, i.e. appropriate use of language-specific constructs (list comprehensions, enumerate(), etc. for Python)."
 
 
 DEFAULT_CATEGORIES = {
@@ -85,15 +57,18 @@ DEFAULT_CATEGORIES = {
 }
 
 
-def get_grades(grades: GradesIn) -> CodingStyleGrade:
-    """Attempts to create a CodingStyleGrade object based on grade data."""
-    # This function lets us change the CodingStyleGrade constructor
+def get_grades(
+    grades: Union[GradesIn, Dict[str, GradingCategory]]
+) -> CodingStyleGrades:
+    """Attempts to create a CodingStyleGrades object based on grade data."""
+    # This function lets us change the CodingStyleGrades constructor
     # however we want without having to worry about breaking construction
-    # of CodingStyleGrade objects elsewhere in the plugin.
-    return CodingStyleGrade.parse_obj(grades)
+    # of CodingStyleGrades objects elsewhere in the plugin, if this is the
+    # canonical way to create CodingStyleGrades objects.
+    return CodingStyleGrades.parse_obj(grades)
 
 
-class CodingStyleGrade(BaseModel):
+class CodingStyleGrades(BaseModel):
     # https://pydantic-docs.helpmanual.io/usage/models/#custom-root-types
     __root__: Dict[str, GradingCategory] = {}
 
@@ -128,19 +103,6 @@ class CodingStyleGrade(BaseModel):
         n = len(grades) or 1  # avoid divison by 0
         return round((sum(g.grade for g in grades) / n), 2)
 
-    def _get_include(self) -> Dict[str, Set[str]]:
-        return {
-            "grades": {
-                # Only include attributes defined in BaseGrade
-                g: BaseGrade.schema()["properties"].keys()
-                for g in self.grades.keys()
-            }
-        }
-
-    def dump_dict(self) -> Dict[str, BaseGrade]:
-        """Returns a dict version of itself that only contains grade and feedback data."""
-        return self.dict(exclude_none=True, include=self._get_include())
-
-    def dump_json(self) -> str:
-        """Returns JSON-serialized string of itself with None fields excluded."""
-        return self.json(exclude_none=True, include=self._get_include())
+    def dict(self) -> Dict[str, GradingCategory]:  # type: ignore
+        """Returns a dict version of its own `__root__` attribute."""
+        return super().dict()["__root__"]

@@ -5,6 +5,7 @@ from flask import redirect, request
 from inginious.client.client import Client
 from inginious.frontend.course_factory import CourseFactory
 from inginious.frontend.courses import Course
+from inginious.frontend.tasks import Task
 from inginious.frontend.pages.course_admin.submission import (
     SubmissionPage,
 )  # the page we want to modify
@@ -20,7 +21,7 @@ from werkzeug.datastructures import ImmutableMultiDict
 from pydantic import ValidationError
 
 from .config import PluginConfig, get_config
-from .grades import CodingStyleGrade, get_grades
+from .grades import CodingStyleGrades, get_grades
 from .logger import get_logger
 from ._types import Submission, GradesIn
 
@@ -31,7 +32,7 @@ TEMPLATES_PATH = PLUGIN_PATH / "templates"
 PLUGIN_KEY = "coding_style"  # use plugin name from config?
 
 
-class CodingStyleGradeOverview(INGIniousAuthPage):
+class CodingStyleGradesOverview(INGIniousAuthPage):
     def GET_AUTH(self) -> str:
         """Displays all coding style grades for a given course for a user."""
         return self.user_manager.session_realname()
@@ -78,20 +79,10 @@ class CodingStyleGrading(INGIniousAdminPage):
         )
 
         # Check if submission has existing coding style grades
-        grades = self.get_submission_grades(submission)
-
-        # Add grade datastructure based on current config if no coding style grade
-        if grades is not None:
-            for category in self.config.enabled.values():
-                # Add grade categories from config that are missing from
-                # existing grades stored in submission.
-                if category not in grades:
-                    grades.add_category(category)
-        else:
-            submission = self.add_submission_grade_datastructure(submission)
-            grades = submission["custom"][
-                PLUGIN_KEY
-            ]  # FIXME: this is ugly and prone to breaking.
+        # Ensure the submission has a CodingStyleGrades object
+        # at ["custom"][PLUGIN_KEY]
+        submission = self.ensure_submission_custom_key(submission)
+        grades = submission["custom"][PLUGIN_KEY]
 
         try:
             user_realname = self.user_manager.get_user_realname(
@@ -132,7 +123,7 @@ class CodingStyleGrading(INGIniousAdminPage):
         return redirect(f"/admin/codingstyle/{submissionid}")
 
     def parse_form_data(self, form_data: ImmutableMultiDict) -> GradesIn:
-        """Transforms flat form data into nested data that can be parsed by `CodingStyleGrade`
+        """Transforms flat form data into nested data that can be parsed by `CodingStyleGrades.parse_obj()`
 
         ### Example:
 
@@ -179,21 +170,14 @@ class CodingStyleGrading(INGIniousAdminPage):
             raise Forbidden(description=_("Invalid ObjectId."))
         return submission
 
-    def get_best_submission(
-        self, courseid: str, taskid: str, username: str
-    ) -> list:  # list what?
-        return list(
-            self.database.user_tasks.find(
-                {"username": username, "courseid": courseid, "taskid": taskid},
-                {"submissionid": 1, "_id": 0},
-            )
-        )
-
     def ensure_submission_custom_key(self, submission: Submission) -> Submission:
-        """Adds data structure for adding custom grades to a submission if it doesn't have one.
+        """Adds data structure for adding custom grades to a submission.
 
-        Stores existing data (if it exists) under `submission["custom"]["original"]`,
+        Stores existing custom submission data (if it exists) under `submission["custom"]["original"]`,
         if existing custom data is not a dict.
+
+        Updates the submission's database record if coding style grades datastructure
+        is added to the submission.
 
         ### Rationale:
 
@@ -217,12 +201,8 @@ class CodingStyleGrading(INGIniousAdminPage):
             "grade": ...
             # ...
             "custom": {
-                "coding_style": {
-                    # our plugin's data
-                },
-                "other_plugin": {
-                    # other plugin's data
-                }
+                "coding_style": CodingStyleGrades(...) # our plugin's data
+                "other_plugin": ..., # other plugin's data
             }
         }
         ```
@@ -237,11 +217,51 @@ class CodingStyleGrading(INGIniousAdminPage):
                 f"Stored previous custom value under submission['custom'][original] for submission {submission}"
             )
 
+        submission_modified = False
+        g = submission["custom"].get(PLUGIN_KEY)
+        try:
+            # Try to parse existng grades
+            grades = get_grades(g)
+        except ValidationError:
+            # Create new grades from enabled config
+            grades = get_grades(self.config.enabled)
+            submission_modified = True
+
+        # Ensure all grading categories are added to the submission's custom grades
+        for category in self.config.enabled.values():
+            if category not in grades:
+                grades.add_category(category)
+                submission_modified = True
+
+        submission["custom"][PLUGIN_KEY] = grades
+
+        if submission_modified:
+            self._update_submission(submission)
+
+        # From here, we can be certain submission["custom"][PLUGIN_KEY]
+        # is a CodingStyleGrades object
+
         return submission
 
     def update_submission_grades(
         self, submissionid: str, grades_data: GradesIn
     ) -> Submission:
+        """Attempts to update a submission with a new set of coding style grades.
+
+        Raises `ValidationError` if grades cannot be validated.
+
+        Parameters
+        ----------
+        submissionid : str
+            The submission ID.
+        grades_data : GradesIn
+            New grades from grading form on the WebApp.
+
+        Returns
+        -------
+        Submission
+            Updated submission
+        """
         # Get the submission
         submission = self.submission_manager.get_submission(
             submissionid, user_check=False
@@ -250,56 +270,29 @@ class CodingStyleGrading(INGIniousAdminPage):
 
         # Add grade data to the submission:
         #
-        # TODO: Refactor? Could be moved to its own function
+        # NOTE: This is by far the worst side-effect of using Pydantic models,
+        # and then doing partial updates to a dynamic number of items.
+        # We by necessity have to copy the grades from the plugin config
+        # and then convert them to a dict, so we can then use dict.update()
+        # with the new grades we receive from the webapp form.
         #
-        # Does the following:
-        #   * Retrieves the currently enabled categories from the config
-        #   * Adds the new grades to the submission for each category
+        # We end up with the following:
+        #   * Retrieves a copy of the currently enabled categories from the config (self.config.dict()["enabled"])
+        #   * Iterates through the grade data from the webapp form (grades_data)
+        #   * Updates each enabled grade with data from the webapp form
+        #   * Adds the new grades to the submission for each category (overwriting the old grades)
         #   * Updates the database with the new custom grades
         conf = self.config.dict()
         grades = conf["enabled"]  # type: Dict[str, dict]
         for category in grades_data:
+            if category not in grades:
+                continue  # skip disabled grades
             grades[category].update(grades_data[category])
+        # Validate new grades and add them to the submission
+        # If validation fails, ValidationError is raised
+        submission["custom"][PLUGIN_KEY] = get_grades(grades)
 
-        # Validate updated grades
-        get_grades(grades)
-
-        submission["custom"][PLUGIN_KEY] = grades
-
-        # Update submission and return updated submission
         return self._update_submission(submission)
-
-    def add_submission_grade_datastructure(self, submission: Submission) -> Submission:
-        # FIXME: we have to make sure submission["custom"] is a dict a thtis point!
-        self.ensure_submission_custom_key(submission)
-        submission["custom"][PLUGIN_KEY] = get_grades(self.config.enabled)
-        return submission
-
-    def get_submission_grades(
-        self, submission: Submission
-    ) -> Optional[CodingStyleGrade]:
-        """Attempts to retrieve a `CodingStyleGrade` for a given submission."""
-        submission = self.ensure_submission_custom_key(submission)
-        grades = submission["custom"].get(PLUGIN_KEY)
-        try:
-            return get_grades(grades)
-        except ValidationError:
-            return None
-
-    def get_submissions(
-        self, courseid: str = "tutorial", taskid: str = "04_run_student"
-    ) -> List[Submission]:
-        """Retrieves all submissions for a given task."""
-
-        # get the task we want to find submissions for
-        task = self.course_factory.get_task(courseid, taskid)
-
-        # get all submissions
-        submissions = self.submission_manager.get_user_submissions(
-            task
-        )  # type: List[Submission]
-
-        return submissions
 
     def _update_submission(self, submission: Submission) -> Submission:
         """Finds an existing submission and updates it with new data.
@@ -308,6 +301,13 @@ class CodingStyleGrading(INGIniousAdminPage):
         """
         # NOTE: Optional[Submission] type annotation? We should never be in a situation
         # where we are able to call this method on a nonexistent submission, though.
+
+        # Convert grades object to dict if it is a CodingStyleGrades instance
+        # so that MongoDB is able to store it.
+        grades = submission["custom"][PLUGIN_KEY]
+        if isinstance(grades, CodingStyleGrades):
+            submission["custom"][PLUGIN_KEY] = grades.dict()
+
         return self.database.submissions.find_one_and_update(
             {"_id": submission["_id"]},
             {"$set": submission},
@@ -330,6 +330,21 @@ def submission_admin_menu(
 def course_admin_menu(course: Course) -> Tuple[str, str]:
     print(course)
     return ("contest", '<i class="fa fa-trophy fa-fw"></i>&nbsp; Contest')
+
+
+def task_list_item(
+    course: Course,
+    taskid: str,
+    task: Task,
+    tasks_data: Any,
+    template_helper: TemplateHelper,
+) -> str:
+    """Displays a progress bar denoting the current coding style grade for a given task."""
+    return "<p>roflmao</p>"
+
+
+def task_menu(course: Course, task: Task, template_helper: TemplateHelper) -> str:
+    return "<p>lol</p>"
 
 
 def init(
@@ -364,9 +379,24 @@ def init(
     Which coding style categories to enable. Omitting this parameter enables all categories.
 
     *categories*
-    Custom categories.
+    Custom category definitions. Each category must contain the following:
+
+        *id*
+        Unique ID of category
+
+        *name*
+        Name of category
+
+        *description*
+        Category description
     """
     config = get_config(conf)
+
+    # Add coding style grade progress bar hook
+    plugin_manager.add_hook("task_list_item", task_list_item)
+
+    # Show coding style grade on task menu
+    plugin_manager.add_hook("task_menu", task_menu)
 
     # Add button to course menu
     plugin_manager.add_hook("course_admin_menu", course_admin_menu)
@@ -381,7 +411,7 @@ def init(
     # User grade overview for a specific course  (NYI)
     plugin_manager.add_page(
         "/course/<courseid>/codingstyle",
-        CodingStyleGradeOverview.as_view("codingstyleoverview"),
+        CodingStyleGradesOverview.as_view("codingstyleoverview"),
     )
 
     # Coding Style Grade view for a specific user submission  (NYI)
