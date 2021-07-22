@@ -1,33 +1,29 @@
-from pathlib import Path
-from typing import Any, Dict, List, Optional, OrderedDict, Union, Tuple
-from copy import deepcopy
 import time
+from copy import deepcopy
+from pathlib import Path
+from typing import Any, Dict, List, Optional, OrderedDict, Tuple, Union
 
-
+from bson.errors import InvalidId
 from flask import redirect, request
 from inginious.client.client import Client
 from inginious.frontend.course_factory import CourseFactory
 from inginious.frontend.courses import Course
-from inginious.frontend.tasks import Task
-from inginious.frontend.pages.course_admin.submission import (
-    SubmissionPage,
-)  # the page we want to modify
-from inginious.frontend.pages.course_admin.utils import INGIniousAdminPage
+from inginious.frontend.pages.course_admin.submission import SubmissionPage
 from inginious.frontend.pages.utils import INGIniousAuthPage
 from inginious.frontend.plugin_manager import PluginManager
+from inginious.frontend.tasks import Task
 from inginious.frontend.template_helper import TemplateHelper
-from pymongo.collection import ReturnDocument
-from bson.errors import InvalidId
-from werkzeug.exceptions import NotFound, Forbidden, BadRequest
-from werkzeug.wrappers.response import Response
-from werkzeug.datastructures import ImmutableMultiDict
 from pydantic import ValidationError
+from pymongo.collection import ReturnDocument
+from werkzeug.datastructures import ImmutableMultiDict
+from werkzeug.exceptions import Forbidden, NotFound
+from werkzeug.wrappers.response import Response
 
+from ._types import GradesIn, Submission
+from .cache import BestSubmissionCache
 from .config import PluginConfig, get_config
 from .grades import CodingStyleGrades, get_grades
 from .logger import get_logger
-from ._types import Submission, GradesIn
-from .cache import BestSubmissionCache
 
 PLUGIN_PATH = Path(__file__).parent.absolute()
 TEMPLATES_PATH = PLUGIN_PATH / "templates"
@@ -297,17 +293,10 @@ class CodingStyleGrading(SubmissionPage):
             if category not in grades:
                 continue  # skip disabled grades
             grades[category].update(grades_data[category])
+
         # Validate new grades and add them to the submission
         # If validation fails, ValidationError is raised
         submission["custom"][PLUGIN_KEY] = get_grades(grades)
-
-        # for category, data in self.config.enabled:
-        #     if category in submission["custom"][PLUGIN_KEY].grades:
-        #         submission["custom"][PLUGIN_KEY]
-
-        #     grades = submission["custom"][PLUGIN_KEY].grades.get
-        # for id, grade in submission["custom"][PLUGIN_KEY].grades.items(): # type: Tuple[str, CodingStyleGrade]
-        #     for categor in grades
 
         return self._update_submission(submission)
 
