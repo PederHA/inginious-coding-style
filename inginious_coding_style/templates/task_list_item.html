@@ -1,0 +1,7 @@
+<br> 
+<label for="grade">Coding Style: </label>
+<div class="progress" id="grade">
+    <div class="progress-bar bg-primary" aria-valuenow="{{ grade | int }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ grade | int }}%">
+        {% if grade.is_integer() %}{{ grade | int }}{% else %}{{ grade }}{% endif %} %
+    </div>
+</div>

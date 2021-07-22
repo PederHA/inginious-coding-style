@@ -33,6 +33,61 @@ class GradingCategory(BaseModel):
         return value
 
 
+class CodingStyleGrades(BaseModel):
+    # https://pydantic-docs.helpmanual.io/usage/models/#custom-root-types
+    __root__: Dict[str, GradingCategory] = {}
+
+    def __bool__(self) -> bool:
+        """Evaluates to true if at least one grade is defined."""
+        return any(g for g in self.grades)
+
+    def __contains__(self, other: Union[str, GradingCategory]) -> bool:
+        if isinstance(other, str):
+            return other in self.__root__
+        elif isinstance(other, GradingCategory):
+            for grade in self.__root__.values():
+                if grade.id == other.id:
+                    return True
+        return False
+
+    @property
+    def grades(self) -> Dict[str, GradingCategory]:
+        return self.__root__
+
+    # TODO: rename to add_grade?
+    def add_category(self, category: GradingCategory) -> None:
+        self.__root__[category.id] = category
+
+    def get_mean(
+        self, config: PluginConfig, round_grade: bool = True, ndigits: int = 2
+    ) -> float:
+        """Returns mean of all _enabled_ coding style grades.
+
+        NOTE: Rounds mean grade with 2 digits after decimal point precision by default.
+        """
+        grades = [v for (k, v) in self.__root__.items() if k in config.enabled]
+        n = len(grades) or 1  # avoid divison by 0
+        avg = sum(g.grade for g in grades) / n
+        if round_grade:
+            return round(avg, ndigits)
+        return avg
+
+    def dict(self) -> Dict[str, GradingCategory]:  # type: ignore
+        """Returns a dict version of its own `__root__` attribute."""
+        return super().dict()["__root__"]
+
+
+def get_grades(
+    grades: Union[GradesIn, Dict[str, GradingCategory]]
+) -> CodingStyleGrades:
+    """Attempts to create a CodingStyleGrades object based on grade data."""
+    # This function lets us change the CodingStyleGrades constructor
+    # however we want without having to worry about breaking construction
+    # of CodingStyleGrades objects elsewhere in the plugin, if this is the
+    # canonical way to create CodingStyleGrades objects.
+    return CodingStyleGrades.parse_obj(grades)
+
+
 DEFAULT_CATEGORIES = {
     "comments": GradingCategory(
         id="comments",
@@ -55,54 +110,3 @@ DEFAULT_CATEGORIES = {
         description="How idiomatic the code is, i.e. appropriate use of language-specific constructs (list comprehensions, enumerate(), etc. for Python).",
     ),
 }
-
-
-def get_grades(
-    grades: Union[GradesIn, Dict[str, GradingCategory]]
-) -> CodingStyleGrades:
-    """Attempts to create a CodingStyleGrades object based on grade data."""
-    # This function lets us change the CodingStyleGrades constructor
-    # however we want without having to worry about breaking construction
-    # of CodingStyleGrades objects elsewhere in the plugin, if this is the
-    # canonical way to create CodingStyleGrades objects.
-    return CodingStyleGrades.parse_obj(grades)
-
-
-class CodingStyleGrades(BaseModel):
-    # https://pydantic-docs.helpmanual.io/usage/models/#custom-root-types
-    __root__: Dict[str, GradingCategory] = {}
-
-    def __bool__(self) -> bool:
-        """Evaluates to true if at least one grade is defined."""
-        return any(g for g in self.grades)
-
-    def __contains__(self, other: Union[str, GradingCategory]) -> bool:
-        if isinstance(other, str):
-            return other in self.__root__
-        elif isinstance(other, GradingCategory):
-            for grade in self.__root__.values():
-                if grade.id == other.id:
-                    return True
-        return False
-
-    @property
-    def grades(self) -> Dict[str, GradingCategory]:
-        # TODO: only return enabled grades
-        return self.__root__
-
-    def add_category(self, category: GradingCategory) -> None:
-        self.__root__[category.id] = category
-
-    def get_average(self, config: PluginConfig) -> float:
-        """Returns average grade.
-
-        NOTE: Rounds floating point number to 2 decimal places.
-        Don't store this number anywhere!
-        """
-        grades = [v for (k, v) in self.__root__.items() if k in config.enabled]
-        n = len(grades) or 1  # avoid divison by 0
-        return round((sum(g.grade for g in grades) / n), 2)
-
-    def dict(self) -> Dict[str, GradingCategory]:  # type: ignore
-        """Returns a dict version of its own `__root__` attribute."""
-        return super().dict()["__root__"]

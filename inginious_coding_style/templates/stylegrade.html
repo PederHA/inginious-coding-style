@@ -39,67 +39,54 @@
 <!-- Display grading categories -->
 {% block content %}
 
-{% if success is not none %}
-    {% if success == '1' %}
-    <div class="alert alert-success" role="alert">
-        Successfully updated submission.
-    </div>
-    {% else %}
-    <div class="alert alert-danger" role="alert">
-        Failed to update submission.
-    </div>    
-    {% endif %}
-{% endif %}
 
 <div class="container-fluid">
     <h1 class="card-title"> Coding Style Grading for Submission {{ submission._id }} </h1>
     <p>Show submission and author info here?</p>
     <hr/>
-    <div class="form-group">
-    <form action="/admin/codingstyle/{{submission._id}}" method="POST">
+    <div>
     {% for id, grade in grades.grades.items() %}
     <!-- Create new row every second index -->
     <!-- Is there a better way to do this? -->
     {% if loop.index0 % 2 == 0 %}
         <div class="row m-1">
     {% endif %}
+    
+    <!-- Grade Box -->
     <div class="col-md-5 p-4 mr-5 mb-5 border rounded">
         <h3>
+            <!-- Unlike grading page, we always show the stored description/name. -->
             {% if id in config.enabled %}
-                {# prefer showing up-to-date name #}
-                {{ config.enabled[id].name }}
-            {% else %}
-                {# fall back on name stored in existing grade #}
                 {% set disabled = True %}
-                {{ grade.name }} (disabled)
             {% endif %}
+            {{ grade.name }} {% if disabled %} (disabled) {% endif %}
         </h3>
         <p>
-            {% if id in config.enabled %}
-                {{ config.enabled[id].description }}
-            {% else %}
-                {{ grade.description }}
-            {% endif %}
+            {{ grade.description }}
         </p>
 
         <!-- Display grade input -->
-            
-            <label for="{{id}}_grade">Grade:</label>
-            <br>
-            <div class="row">
-                <div class="col-md-2">
-                    <input class="form-control" type="number" id="{{id}}_grade" name="{{id}}_grade" min="0" max="100" value={{grade.grade}} {% if disabled %} readonly {% endif %}>
+            <div class="col-md-5">
+                <label for="{{id}}_grade">Grade:</label>
+                <br>
+                <div class="row">
+                    <div class="col">
+                        <p id="{{id}}_grade">{{ grade.grade }}</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <label for="{{id}}_feedback">Feedback:</label>
+                        <br>
+                        <p id="{{id}}_feedback" {% if disabled %} readonly {% endif %}>{{ grade.feedback }}</textarea>
+                        {% if disabled %}
+                            <small>NOTE: This category was enabled when the category was graded, but has since been disabled or renamed.</small>
+                        {% endif %}
                 </div>
             </div>
-            <br>
-            <label for="{{id}}_feedback">Feedback:</label>
-            <br>
-            <textarea class="form-control" id="{{id}}_feedback" name="{{id}}_feedback" rows="4" cols="50" {% if disabled %} readonly {% endif %}>{{ grade.feedback }}</textarea>
-            {% if disabled %}
-                <small>NOTE: This category has been disabled and will not contribute to the submission's grade.</small>
-            {% endif %}
+        </div>
     </div>
-    <!-- <div class="col-md-1"></div> -->
+
     {% if loop.index % 2 == 0 %}
         </div>
     {% endif %}
@@ -122,11 +109,3 @@
 </div>
 </div>
 {% endblock %}
-
-
-{#         <!-- Try to fetch name and description from running config if possible -->
-    {% if config.enabled.get(id) %}
-        </h1>{{ config.enabled[id].name }}</h1>
-    {% else %}
-        
-    {% endif %} #}
