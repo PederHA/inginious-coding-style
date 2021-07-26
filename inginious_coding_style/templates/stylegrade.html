@@ -1,8 +1,7 @@
 {% extends "layout.html" %}
-<!-- Include htmx: https://htmx.org/ -->
-<script src="https://unpkg.com/htmx.org@1.5.0"></script>
 
 {% block navbar %}
+<!-- TODO: fix navbar -->
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{{get_homepath()}}/course/{{course.get_id()}}">{{
@@ -41,7 +40,7 @@
 
 
 <div class="container-fluid">
-    <h1 class="card-title"> Coding Style Grading for Submission {{ submission._id }} </h1>
+    <h1 class="card-title"> Coding Style Grades</h1>
     <p>Show submission and author info here?</p>
     <hr/>
     <div>
@@ -53,10 +52,12 @@
     {% endif %}
     
     <!-- Grade Box -->
-    <div class="col-md-5 p-4 mr-5 mb-5 border rounded">
+    <div class="col-md-5 p-4 mr-5 mb-5 border">
         <h3>
             <!-- Unlike grading page, we always show the stored description/name. -->
             {% if id in config.enabled %}
+                {% set disabled = False %}
+            {% else %}
                 {% set disabled = True %}
             {% endif %}
             {{ grade.name }} {% if disabled %} (disabled) {% endif %}
@@ -65,24 +66,46 @@
             {{ grade.description }}
         </p>
 
-        <!-- Display grade input -->
-            <div class="col-md-5">
-                <label for="{{id}}_grade">Grade:</label>
+        <!-- Display grade frame -->
+        <div class="row">
+            <div class="col-md-12">
+                <label for="{{id}}_grade"><h5>Grade:</h5></label>
                 <br>
                 <div class="row">
-                    <div class="col">
-                        <p id="{{id}}_grade">{{ grade.grade }}</p>
+                    <div class="col-md-6">
+                        <div class="progress border" id="{{id}}_grade">
+                            <div class="progress-bar bg-success" aria-valuenow="{{ grade }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ grade.grade }}%">
+                                {{ grade.grade }}
+                                <!-- <a class="list-group-item list-group-item-action" href="/submission/{{submission._id}}/codingstyle">
+                                </a> -->
+                            </div>
+
+                        </div>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col">
-                        <label for="{{id}}_feedback">Feedback:</label>
-                        <br>
-                        <p id="{{id}}_feedback" {% if disabled %} readonly {% endif %}>{{ grade.feedback }}</textarea>
+
+                {% if grade.feedback %}
+                <div class="row pt-3">
+                    <div class="col-md-12">
+                        <label for="{{id}}_feedback"><h5>Feedback:</h5></label>
+                        <br>  
+                        <!-- Show feedback (if any) -->
+                        
+                        <p id="{{id}}_feedback" class="border p-2" {% if disabled %} readonly {% endif %}>
+                            {% if grade.feedback %}
+                                {{ grade.feedback }}
+                            {% else %}
+                                <br>
+                            {% endif %}
+                        </p>
+                        
+
                         {% if disabled %}
-                            <small>NOTE: This category was enabled when the category was graded, but has since been disabled or renamed.</small>
+                            <small>NOTE: This category was enabled when the submission was graded, but has since been disabled or renamed.</small>
                         {% endif %}
+                    </div>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -96,16 +119,11 @@
     <div class="col-md-12">
 
     {% if grades %}
-    <h4>mean:</h4>
-    <p>{{grades.get_mean(config)}}</p>
+    <h4>Mean style grade:</h4>
+    <p>{{grades.get_mean(config) | int }} / 100</p>
     {% endif %}
 
-    
-
-    <!-- <button class="btn btn-primary" hx-post="/admin/codingstyle/{{submission._id}}"><i class="fa fa-save"></i> Submit</button> -->
-    <input class="btn btn-primary" type="submit" value="Submit">
     </div>
-    </form>
 </div>
 </div>
 {% endblock %}

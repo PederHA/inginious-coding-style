@@ -37,13 +37,48 @@ PLUGIN_CONFIG: PluginConfig = None  # type: ignore
 BEST_SUBMISSION_CACHE = BestSubmissionCache()
 
 
-class CodingStyleGradesOverview(INGIniousAuthPage):
+class StudentSubmissionCodingStyle(INGIniousAuthPage):
+    """Displays a detailed view of coding style grades for a single submission
+    made by a student."""
+
+    _logger = get_logger()
+
+    def __init__(self, config: PluginConfig, *args, **kwargs) -> None:
+        self.config = config
+        super().__init__(*args, **kwargs)
+
     def GET_AUTH(self, submissionid: str) -> str:
         """Displays all coding style grades for a given course for a user."""
+        submission = self.get_submission(submissionid)
+        course = self.get_course(submission)
+        task = self.get_task(submission, course)
 
-        submission = self.submission_manager.get_submission(submissionid)
-        if not submission:
-            return "Unable find submission."
+        if (
+            not submission.get("custom")
+            or not isinstance(submission["custom"], dict)
+            or not submission["custom"].get(PLUGIN_KEY)
+        ):
+            # TODO: improve this page
+            raise NotFound("Submission has no coding style grades.")
+
+        try:
+            grades = get_grades(submission["custom"][PLUGIN_KEY])
+        except ValidationError:
+            msg = (
+                f"Unable to process coding style grades for submission {submissionid}."
+            )
+            self._logger.exception(msg)
+            raise InternalServerError(msg)
+
+        user_realname = None
+        try:
+            user_realname = self.user_manager.get_user_realname(
+                submission["username"][0]
+            )
+        except (IndexError, KeyError):
+            self._logger.error(f"Unable to get username for submission {submission}.")
+        if not user_realname:
+            user_realname = "Unknown user"
 
         return self.template_helper.render(
             "stylegrade.html",
@@ -56,9 +91,41 @@ class CodingStyleGradesOverview(INGIniousAuthPage):
             config=self.config,
         )
 
-    def fetch_submission(self, submissionid: str) -> dict:
+    def get_course(self, submission: Submission) -> Course:
+        try:
+            courseid = submission.get("courseid")
+            course = self.course_factory.get_course(courseid)
+        except Exception as e:
+            if not courseid:
+                self._logger.error(
+                    f"Submission {submission['_id']} is not associated with any course. Has the submission been corrupted?"
+                )
+            else:
+                self._logger.error(
+                    f"Unable to find course with course ID {courseid}. Has it been deleted?"
+                )
+            raise InternalServerError("Unable to display submission.")
+        return course
+
+    def get_task(self, submission: Submission, course: Course) -> Task:
+        try:
+            taskid = submission.get("taskid")
+            task = course.get_task(taskid)
+        except Exception as e:
+            if not taskid:
+                self._logger.error(
+                    f"Submission {submission['_id']} is not associated with a task. Has the submission been corrupted?"
+                )
+            else:
+                self._logger.error(
+                    f"Unable to find task with task ID {taskid}. Has it been deleted?"
+                )
+            raise InternalServerError("Unable to display submission.")
+        return task
+
+    def get_submission(self, submissionid: str) -> Submission:
         """Slimmed down version of SubmissionPage.fetch_submission.
-        Only returns dict (submission), instead of Tuple[Course, Task, dict]"""
+        Only returns Submission, instead of Tuple[Course, Task, Submission]"""
 
         try:
             submission = self.submission_manager.get_submission(submissionid, False)
@@ -433,7 +500,15 @@ def task_list_item(
 
 
 def task_menu(course: Course, task: Task, template_helper: TemplateHelper) -> str:
-    return "<p>lol</p>"
+    best_submission = get_best_submission(task)
+    if best_submission is None:
+        return ""
+
+    return template_helper.render(
+        "task_menu.html",
+        template_folder=TEMPLATES_PATH,
+        submission=best_submission,
+    )
 
 
 def init(
@@ -506,8 +581,8 @@ def init(
         CodingStyleGradesOverview.as_view("codingstyleoverview"),
     )
 
-    # Coding Style Grade view for a specific user submission  (NYI)
+    # Coding Style Grade view for a specific user submission
     plugin_manager.add_page(
         "/submission/<submissionid>/codingstyle",
-        CodingStyleGrading.as_view("codingstylesubmission", config),
+        StudentSubmissionCodingStyle.as_view("codingstylesubmission", config),
     )
