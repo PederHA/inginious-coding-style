@@ -79,13 +79,32 @@ class CodingStyleGrades(BaseModel):
             self.__root__.pop(category.id, None)
 
     def get_mean(
-        self, config: PluginConfig, round_grade: bool = True, ndigits: int = 2
+        self,
+        config: Optional[PluginConfig] = None,
+        round_grade: bool = True,
+        ndigits: int = 2,
     ) -> float:
-        """Returns mean of all _enabled_ coding style grades.
+        """Returns mean coding style grade.
+        Optionally calculate only based on enabled grading categories.
 
-        NOTE: Rounds mean grade with 2 digits after decimal point precision by default.
+        Parameters
+        ----------
+        config : `Optional[PluginConfig]`, optional
+            Plugin config specifying enabled categories, by default None
+        round_grade : `bool`, optional
+            Whether or not to round the mean grade value, by default True
+        ndigits : `int`, optional
+            Rounding precision, by default 2 digits after decimal point
+
+        Returns
+        -------
+        `float`
+            Mean grade
         """
-        grades = [v for (k, v) in self.__root__.items() if k in config.enabled]
+        if config is not None:
+            grades = [v for (k, v) in self.__root__.items() if k in config.enabled]
+        else:
+            grades = [v for (k, v) in self.__root__.items()]
         n = len(grades) or 1  # avoid divison by 0
         avg = sum(g.grade for g in grades) / n
         if round_grade:
