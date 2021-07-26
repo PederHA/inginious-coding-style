@@ -16,7 +16,7 @@ from inginious.frontend.template_helper import TemplateHelper
 from pydantic import ValidationError
 from pymongo.collection import ReturnDocument
 from werkzeug.datastructures import ImmutableMultiDict
-from werkzeug.exceptions import Forbidden, NotFound
+from werkzeug.exceptions import BadRequest, Forbidden, InternalServerError, NotFound
 from werkzeug.wrappers.response import Response
 
 from ._types import GradesIn, Submission
@@ -151,23 +151,27 @@ class CodingStyleGrading(SubmissionPage):
         # Get submission, course and task objects
         course, task, submission = self.fetch_submission(submissionid)
 
-        # Ensure the submission has a CodingStyleGrades object
-        # at ["custom"][PLUGIN_KEY]
+        # Ensure the submission has a CodingStyleGrades object at ["custom"][PLUGIN_KEY].
+        # Loads existing style grades or creates new.
         submission = self.ensure_submission_custom_key(submission)
         grades = submission["custom"][PLUGIN_KEY]  # type: CodingStyleGrades
 
+        # TODO: refactor this block
+        user_realname = None
         try:
             user_realname = self.user_manager.get_user_realname(
                 submission["username"][0]
             )
         except IndexError:
-            self._logger.warning(
+            self._logger.error(
                 f"Unable to find author of submission {submission['_id']}."
             )
+        if not user_realname:
             user_realname = "Unknown user"
 
         # Check if page is displayed after updating submission grades
         # Display alert denoting success of update
+        # None = no msg, True = success msg, False = failure msg
         success = request.args.get("success")
 
         return self.template_helper.render(
@@ -199,8 +203,33 @@ class CodingStyleGrading(SubmissionPage):
 
         # Redirect to updated submission
         return redirect(
-            f"/admin/codingstyle/{submissionid}?success={1 if success else 0}"
+            f"/admin/codingstyle/submission/{submissionid}?success={1 if success else 0}"
         )
+
+    def put(self, submissionid: str, *args, **kwargs) -> str:
+        """We (ab)use Flask.views.MethodView here to add a PUT rule for the view here.
+        INGInious only implements their own GET_AUTH and POST_AUTH, so we use this method
+        to support partial updates of Coding Style Grades, such as updating only a single category
+        or removing a category altogether."""
+
+        # Retrieve submission, then check permissions
+        submission = self.submission_manager.get_submission(
+            submissionid, user_check=False
+        )
+        self.get_course_and_check_rights(submission["courseid"], submission["taskid"])
+
+        if category := request.args.get("remove"):
+            self.remove_category_from_submission(submission, category=category)
+        # TODO: add other PUT operations
+
+        return f"ok"
+        # return redirect(f"/admin/codingstyle/submission/{submissionid}")
+
+    def remove_category_from_submission(
+        self, submission: Submission, category: str
+    ) -> None:
+        submission = self.ensure_submission_custom_key(submission)
+        submission["custom"][PLUGIN_KEY].remove_category(category)
 
     def parse_form_data(self, form_data: ImmutableMultiDict) -> GradesIn:
         """Transforms flat form data into nested data that can be parsed
@@ -283,7 +312,8 @@ class CodingStyleGrading(SubmissionPage):
             submission["custom"] = {"original": submission["custom"]}
             # TODO: find out how to get id value from MongoDB ObjectId object
             self._logger.info(
-                f"Stored previous custom value under submission['custom'][original] for submission {submission}"
+                f"Stored previous custom value under submission['custom']['original'] for submission {submission}. "
+                "Ensure another plugin is not overwriting custom submission data."
             )
 
         # Check if submission has existing coding style grades
@@ -323,15 +353,20 @@ class CodingStyleGrading(SubmissionPage):
 
         Parameters
         ----------
-        submissionid : str
-            The submission ID.
-        grades_data : GradesIn
+        submissionid : `str`
+            ID of the submission to update grades of.
+        grades_data : `GradesIn`
             Input from grading form on the WebApp.
 
         Returns
         -------
-        Submission
+        `Submission`
             Updated submission
+
+        Raises
+        -------
+        `ValidationError`
+            Unable to validate new grades.
         """
         # Get the submission
         submission = self.submission_manager.get_submission(
@@ -341,19 +376,23 @@ class CodingStyleGrading(SubmissionPage):
 
         # Add grade data to the submission
         #
-        # NOTE: This is by far the worst side-effect of using Pydantic models,
-        # and then doing partial updates to a dynamic number of items.
+        # NOTE:
+        # This is by far the worst side-effect of using Pydantic with a dynamic
+        # model, and having to do partial updates to a variable number of items.
+        #
         # We by necessity have to copy the grading categories from the plugin config
         # and then convert them to a dict, so we can then use dict.update()
-        # with the new grades we receive from the webapp form.
+        # with the new grades we receive from the webapp form. After updating the
+        # dict, we convert it back to a CodingStyleGrades object.
         #
+        # This is clunky, but it still executes very quickly.
         #
-        # We end up with the following:
-        #   * Retrieves a copy of the currently enabled categories from the config (self.config.dict()["enabled"])
-        #   * Iterates through the grade data from the webapp form (grades_data)
-        #   * Updates each enabled grade with data from the webapp form
-        #   * Adds the new grades to the submission for each category (overwriting the old grades)
-        #   * Updates the database with the new custom grades
+        # We end up doing the following:
+        #   * Retrieve a copy of the currently enabled categories from the config (self.config.dict()["enabled"])
+        #   * Iterate through the grade data from the webapp form (grades_data)
+        #   * Update each enabled grade with data from the webapp form
+        #   * Add the new grades to the submission for each category (overwriting the old grades)
+        #   * Update the database with the new custom grades
         conf = self.config.dict()
         grades = conf["enabled"]  # type: Dict[str, dict]
         for category in grades_data:
@@ -397,17 +436,18 @@ class CodingStyleGrading(SubmissionPage):
         ## WARNING: EXPERIMENTAL
 
         Calculates the mean of submission base grade + coding style grade mean
-        and updates its entry in the DB collection 'user_tasks', which holds
-        top submissions.
+        and updates its entry in the DB collection 'user_tasks', which is a collection
+        that records top submissions for every user for every task.
 
         NOTE: This method has no effect if the submission that is being graded is
         _not_ the user's top submission for the given task. This is due to the way
         INGInious seems to store a sort of "meta-submission" in the 'user_tasks'
         collection, which keeps track of the user's best grade for a specific task and
-        the number of submissions they have made for that task. It is that grade that
-        is displayed on the course's task list, and thus it is also the one we are
-        modifying in this method. Also, it makes no sense to grade a submission that
-        ISN'T the user's best submissions, so that is also relevant!
+        the number of submissions they have made for that task, and the ID of their
+        top submission. It is that grade that is displayed on the course's task list,
+        and thus it is also the one we are modifying in this method.
+        Furthermore, it makes no sense to grade a submission that ISN'T the user's
+        best submission, so that is also relevant!
 
         Submission's new grade calculation:
         `merged = (base_grade + style_mean) / 2`
@@ -446,7 +486,14 @@ def course_admin_menu(course: Course) -> Tuple[str, str]:
     return ("contest", '<i class="fa fa-trophy fa-fw"></i>&nbsp; Contest')
 
 
-def get_best_submission(submissions: List[Submission]) -> Optional[Submission]:
+def get_best_submission(task: Task) -> Optional[Submission]:
+    # Check if we can find any submissions at all
+    submission_manager = task._plugin_manager.get_submission_manager()
+    submissions = submission_manager.get_user_submissions(task)
+    if not submissions:
+        return None
+
+    # We have submissions, now find the best one
     best = None
     for submission in submissions:
         if best is None or submission["grade"] > best["grade"]:
@@ -464,12 +511,7 @@ def task_list_item(
     """Displays a progress bar denoting the current coding style grade for a given task."""
     # TODO: optimize. Cache best submission?
     start = time.perf_counter()
-    submission_manager = task._plugin_manager.get_submission_manager()
-    submissions = submission_manager.get_user_submissions(task)
-    if not submissions:
-        return ""
-
-    best_submission = get_best_submission(submissions)
+    best_submission = get_best_submission(task)
 
     # user_manager = task._plugin_manager.get_user_manager()
     # best_submission = BEST_SUBMISSION_CACHE.get(
@@ -496,6 +538,7 @@ def task_list_item(
         "task_list_item.html",
         template_folder=TEMPLATES_PATH,
         grade=grades.get_mean(PLUGIN_CONFIG),
+        submission=best_submission,
     )
 
 
@@ -559,27 +602,27 @@ def init(
     global PLUGIN_CONFIG
     PLUGIN_CONFIG = config
 
-    # Add coding style grade progress bar hook
+    # Display coding style grades in list of tasks for a course
     plugin_manager.add_hook("task_list_item", task_list_item)
 
-    # Show coding style grade on task menu
+    # Show button to navigate to detailed coding style grades for a submission
     plugin_manager.add_hook("task_menu", task_menu)
 
-    # Add button to course menu
-    plugin_manager.add_hook("course_admin_menu", course_admin_menu)
+    # Show button to navigate to coding style grading page for admins
+    # plugin_manager.add_hook("course_admin_menu", course_admin_menu)
     plugin_manager.add_hook("submission_admin_menu", submission_admin_menu)
 
-    # Grading interface for admins  (NYI)
+    # Grading interface for admins
     plugin_manager.add_page(
-        "/admin/codingstyle/<submissionid>",
+        "/admin/codingstyle/submission/<submissionid>",
         CodingStyleGrading.as_view("codingstyleadmin", config),
     )
 
-    # User grade overview for a specific course  (NYI)
-    plugin_manager.add_page(
-        "/course/<courseid>/codingstyle",
-        CodingStyleGradesOverview.as_view("codingstyleoverview"),
-    )
+    # # User grade overview for a specific course  (NYI)
+    # plugin_manager.add_page(
+    #     "/course/<courseid>/codingstyle",
+    #     CodingStyleGradesOverview.as_view("codingstyleoverview"),
+    # )
 
     # Coding Style Grade view for a specific user submission
     plugin_manager.add_page(
