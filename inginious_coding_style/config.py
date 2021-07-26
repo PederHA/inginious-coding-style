@@ -7,7 +7,7 @@ from .grades import GradingCategory, DEFAULT_CATEGORIES
 
 class ExperimentalSettings(BaseModel):
     merge_grades: bool = False
-    # dryrun: bool = False # NYI
+    # automatic_grading: bool = False # NYI (obviously)
     # other experimental settings here...
 
 
@@ -42,9 +42,8 @@ class PluginConfigIn(BaseModel):
     def accept_experimental_none(
         cls, experimental: Optional[Dict[str, bool]], field: ModelField
     ) -> Union[ExperimentalSettings, Optional[Dict[str, bool]]]:
-        if experimental is None:
-            if field.default_factory is not None:  # just to satisfy mypy
-                return field.default_factory()
+        if experimental is None and field.default_factory is not None:
+            return field.default_factory()
         return experimental
 
 
