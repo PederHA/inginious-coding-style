@@ -46,7 +46,7 @@ class CodingStyleGrades(BaseModel):
             return other in self.__root__
         elif isinstance(other, GradingCategory):
             for grade in self.__root__.values():
-                if grade.id == other.id:
+                if grade.id == other.id:  # We assume identical ID means they are equal
                     return True
         return False
 
@@ -56,7 +56,27 @@ class CodingStyleGrades(BaseModel):
 
     # TODO: rename to add_grade?
     def add_category(self, category: GradingCategory) -> None:
+        """Adds a grading category
+
+        Parameters
+        ----------
+        category : `GradingCategory`
+            The grading category to add.
+        """
         self.__root__[category.id] = category
+
+    def remove_category(self, category: Union[str, GradingCategory]) -> None:
+        """Removes a grading category.
+
+        Parameters
+        ----------
+        category : Union[str, GradingCategory]
+            Name of category or a `GradingCategory` object.
+        """
+        if isinstance(category, str):
+            self.__root__.pop(category, None)
+        elif isinstance(category, GradingCategory):
+            self.__root__.pop(category.id, None)
 
     def get_mean(
         self, config: PluginConfig, round_grade: bool = True, ndigits: int = 2
