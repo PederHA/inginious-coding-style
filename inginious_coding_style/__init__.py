@@ -1,7 +1,7 @@
 import time
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Dict, List, Optional, OrderedDict, Tuple, Union
+from typing import Any, Dict, List, Optional, OrderedDict, Tuple, Union, TYPE_CHECKING
 
 from bson.errors import InvalidId
 from flask import redirect, request
@@ -24,17 +24,26 @@ from .cache import BestSubmissionCache
 from .config import PluginConfig, get_config
 from .grades import CodingStyleGrades, get_grades
 from .logger import get_logger
+from .utils import (
+    get_user_realname,
+    get_submission_submitted_on,
+    has_coding_style_grades,
+    get_best_submission,
+)
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 PLUGIN_PATH = Path(__file__).parent.absolute()
 TEMPLATES_PATH = PLUGIN_PATH / "templates"
 
 # The key to store style grade data in the submission's "custom" dict
-PLUGIN_KEY = "coding_style"  # use plugin name from config?
+PLUGIN_KEY = "coding_style"  # NOTE: use plugin name from config?
 
 # Makes plugin config available globally
 PLUGIN_CONFIG: PluginConfig = None  # type: ignore
 
-BEST_SUBMISSION_CACHE = BestSubmissionCache()
+BEST_SUBMISSION_CACHE = BestSubmissionCache()  # FIXME: UNUSED
 
 
 class StudentSubmissionCodingStyle(INGIniousAuthPage):
@@ -53,12 +62,7 @@ class StudentSubmissionCodingStyle(INGIniousAuthPage):
         course = self.get_course(submission)
         task = self.get_task(submission, course)
 
-        if (
-            not submission.get("custom")
-            or not isinstance(submission["custom"], dict)
-            or not submission["custom"].get(PLUGIN_KEY)
-        ):
-            # TODO: improve this page
+        if not has_coding_style_grades(submission, PLUGIN_KEY):
             raise NotFound("Submission has no coding style grades.")
 
         try:
@@ -70,20 +74,17 @@ class StudentSubmissionCodingStyle(INGIniousAuthPage):
             self._logger.exception(msg)
             raise InternalServerError(msg)
 
-        user_realname = None
-        try:
-            user_realname = self.user_manager.get_user_realname(
-                submission["username"][0]
-            )
-        except (IndexError, KeyError):
-            self._logger.error(f"Unable to get username for submission {submission}.")
-        if not user_realname:
-            user_realname = "Unknown user"
+        user_realname = get_user_realname(self, submission)
+        submitted_on = get_submission_submitted_on(submission)
+
+        # TODO: handle group submissions
 
         return self.template_helper.render(
             "stylegrade.html",
             template_folder=TEMPLATES_PATH,
             user_realname=user_realname,
+            submitted_on=submitted_on,
+            user_manager=self.user_manager,
             course=course,
             task=task,
             submission=submission,
@@ -148,7 +149,6 @@ class CodingStyleGrading(SubmissionPage):
 
     def GET_AUTH(self, submissionid: str) -> str:
         """Displays coding style grading page for a specific submission."""
-        # Get submission, course and task objects
         course, task, submission = self.fetch_submission(submissionid)
 
         # Ensure the submission has a CodingStyleGrades object at ["custom"][PLUGIN_KEY].
@@ -170,7 +170,7 @@ class CodingStyleGrading(SubmissionPage):
             user_realname = "Unknown user"
 
         # Check if page is displayed after updating submission grades
-        # Display alert denoting success of update
+        # Display alert denoting success of update:
         # None = no msg, True = success msg, False = failure msg
         success = request.args.get("success")
 
@@ -491,34 +491,12 @@ class CodingStyleGrading(SubmissionPage):
 
 def submission_admin_menu(
     course: Course, submission: Submission, template_helper: TemplateHelper
-) -> Optional[str]:
-    info = course.get_descriptor()
-    get_logger().info("hello!")
+) -> str:
     return template_helper.render(
         "submission_admin_menu.html",
         template_folder=TEMPLATES_PATH,
         submission=submission,
     )
-
-
-def course_admin_menu(course: Course) -> Tuple[str, str]:
-    print(course)
-    return ("contest", '<i class="fa fa-trophy fa-fw"></i>&nbsp; Contest')
-
-
-def get_best_submission(task: Task) -> Optional[Submission]:
-    # Check if we can find any submissions at all
-    submission_manager = task._plugin_manager.get_submission_manager()
-    submissions = submission_manager.get_user_submissions(task)
-    if not submissions:
-        return None
-
-    # We have submissions, now find the best one
-    best = None
-    for submission in submissions:
-        if best is None or submission["grade"] > best["grade"]:
-            best = submission
-    return best
 
 
 def task_list_item(
@@ -533,16 +511,6 @@ def task_list_item(
     start = time.perf_counter()
     best_submission = get_best_submission(task)
 
-    # user_manager = task._plugin_manager.get_user_manager()
-    # best_submission = BEST_SUBMISSION_CACHE.get(
-    #     user_manager.session_username(), course._id, submissions
-    # )
-
-    # best_submission = BEST_SUBMISSION_CACHE.get(
-    #     submissions[0]["username"][0], course._id, submissions
-    # )
-
-    print(time.perf_counter() - start)
     # NOTE: display best coding style grade or coding style grade of best submission?
 
     try:
@@ -564,7 +532,9 @@ def task_list_item(
 
 def task_menu(course: Course, task: Task, template_helper: TemplateHelper) -> str:
     best_submission = get_best_submission(task)
-    if best_submission is None:
+    if best_submission is None or not has_coding_style_grades(
+        best_submission, PLUGIN_KEY
+    ):
         return ""
 
     return template_helper.render(
@@ -639,7 +609,6 @@ def init(
     plugin_manager.add_hook("task_menu", task_menu)
 
     # Show button to navigate to coding style grading page for admins
-    # plugin_manager.add_hook("course_admin_menu", course_admin_menu)
     plugin_manager.add_hook("submission_admin_menu", submission_admin_menu)
 
     # Grading interface for admins
