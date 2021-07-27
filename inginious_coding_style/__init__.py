@@ -153,21 +153,12 @@ class CodingStyleGrading(SubmissionPage):
 
         # Ensure the submission has a CodingStyleGrades object at ["custom"][PLUGIN_KEY].
         # Loads existing style grades or creates new.
+
+        # TODO: use has_coding_style_grades()?
         submission = self.ensure_submission_custom_key(submission)
         grades = submission["custom"][PLUGIN_KEY]  # type: CodingStyleGrades
 
-        # TODO: refactor this block
-        user_realname = None
-        try:
-            user_realname = self.user_manager.get_user_realname(
-                submission["username"][0]
-            )
-        except IndexError:
-            self._logger.error(
-                f"Unable to find author of submission {submission['_id']}."
-            )
-        if not user_realname:
-            user_realname = "Unknown user"
+        user_realname = get_user_realname(self, submission)
 
         # Check if page is displayed after updating submission grades
         # Display alert denoting success of update:
