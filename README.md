@@ -133,7 +133,7 @@ To view detailed feedback, students can click on the new "Coding Style Grades" b
 
 Detailed feedback is displayed similar to the admin grading interface.
 
-![Task list showing grades](doc/img/06_submissiongrades.png)
+![Task list showing grades](doc/img/06_submissiongrades_1.png)
 
 ## Developer Notes
 
