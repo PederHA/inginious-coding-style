@@ -58,9 +58,13 @@ plugins:
 
 Display name of the plugin
 
+---
+
 #### `enabled` (optional)
 
 Which coding style categories to enable. Omitting this parameter enables all default categories (`comments`, `modularity`, `structure`, `idiomaticity`).
+
+---
 
 #### `categories` (optional)
 
@@ -78,6 +82,8 @@ Display name of category. Defaults to `id.title()` if omitted.
 
 Category description.
 
+---
+
 #### `experimental`
 
 Experimental options
@@ -87,6 +93,8 @@ Experimental options
 Modifies a submission's displayed grade by finding the mean of automated grading done by INGInious and Coding Style grades: 
 
 `new_grade = (automated_grade + coding_style_grade_mean) / 2`
+
+---
 
 
 ## Usage
