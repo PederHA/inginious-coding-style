@@ -13,7 +13,14 @@ GradesIn = Dict[str, GradingCategoryIn]
 
 
 class INGIniousPageProto(Protocol):
+    """Base class for INGInious page protocol types.
+    Only stipulates that a logger must be present for now."""
+
     _logger: Logger
+
+
+class HasUserManager(INGIniousPageProto):
+    """Protocol type that stipulates the object must have access to the user manager."""
 
     @property
     def user_manager(self) -> UserManager:

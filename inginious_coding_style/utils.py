@@ -4,10 +4,10 @@ from inginious.frontend.tasks import Task
 
 if TYPE_CHECKING:
     from datetime import datetime
-    from ._types import Submission, INGIniousPageProto
+    from ._types import Submission, HasUserManager
 
 
-def get_user_realname(obj: INGIniousPageProto, submission: Submission) -> str:
+def get_user_realname(obj: HasUserManager, submission: Submission) -> str:
     """Retrieves the real name of the author of a submission."""
     user_realname = None
     try:
