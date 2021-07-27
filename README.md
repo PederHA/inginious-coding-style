@@ -96,7 +96,6 @@ Modifies a submission's displayed grade by finding the mean of automated grading
 
 ---
 
-
 ## Usage
 
 INGInious Coding Style should be easy to use for both tutors and students. The plugin adds new buttons and displays to various existing menus in the application that can be used to add and view grades.
@@ -127,7 +126,7 @@ Students can get an overview of their coding style grades on the course's task l
 
 ![Task list showing grades](doc/img/04_overview.png)
 
-To view detailed feedback, students can click on the new "Coding Style Grades" button in the task menu.
+To view detailed feedback, students can click on the new "Coding Style Grades" button in the task menu. NOTE: The button is only visible if the submission's coding style has been graded.
 
 ![Coding Style Grades task menu button](doc/img/05_studentbutton.png)
 
