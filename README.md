@@ -1,6 +1,6 @@
 # INGInious Coding Style Grader
 
-A plugin for INGInious that aims to allow teachers to grade several aspect of a student submission's code style.
+A plugin for INGInious that allows tutors to grade several aspect of student submissions' coding style.
 
 ## Installation
 
@@ -103,6 +103,8 @@ INGInious Coding Style should be easy to use for both tutors and students. The p
 
 (All design is subject to change.)
 
+---
+
 ### Adding Coding Style Grades (Admins & Tutors)
 
 Find the submission to be graded.
@@ -116,6 +118,8 @@ Click on the new "Grade Coding Style" button to access the grading interface.
 Add grades and feedback (optional) to submission. 
 
 ![Grading interface](doc/img/03_gradingpage.png)
+
+---
 
 ### Checking Grades (Students)
 
