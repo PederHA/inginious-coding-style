@@ -127,13 +127,13 @@ Students can get an overview of their coding style grades on the course's task l
 
 ![Task list showing grades](doc/img/04_overview.png)
 
-To view detailed feedback, students can click on the new "Coding Style Grades" displayed on the task menu.
+To view detailed feedback, students can click on the new "Coding Style Grades" button in the task menu.
 
 ![Coding Style Grades task menu button](doc/img/05_studentbutton.png)
 
 Detailed feedback is displayed similar to the admin grading interface.
 
-![Task list showing grades](doc/img/06_studentgrades.png)
+![Task list showing grades](doc/img/06_1_studentgrades.png)
 
 ## Developer Notes
 
