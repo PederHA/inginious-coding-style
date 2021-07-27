@@ -9,6 +9,7 @@ if TYPE_CHECKING:
 
 def get_user_realname(obj: HasUserManager, submission: Submission) -> str:
     """Retrieves the real name of the author of a submission."""
+    # TODO: handle group submissions
     user_realname = None
     try:
         user_realname = obj.user_manager.get_user_realname(submission["username"][0])
@@ -24,6 +25,12 @@ def get_submission_submitted_on(submission: Submission) -> str:
 
 
 def has_coding_style_grades(submission: Submission, plugin_key: str) -> bool:
+    """Determines if a Submission object looks like it contains coding style grades.
+
+    NOTE: This function only verifies that _something_ is present at `Submission["custom"][PLUGIN_KEY]`.
+    The actual contents are not verified. `.grades.get_grades()` handles the
+    verification of the contents.
+    """
     return (
         bool(submission.get("custom"))
         and isinstance(submission["custom"], dict)
