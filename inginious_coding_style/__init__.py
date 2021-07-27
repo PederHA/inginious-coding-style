@@ -406,7 +406,7 @@ class CodingStyleGrading(SubmissionPage):
         # with the new grades we receive from the webapp form. After updating the
         # dict, we convert it back to a CodingStyleGrades object.
         #
-        # This is clunky, but it still executes very quickly.
+        # This is clunky, but it still executes very quickly though.
         #
         # We end up doing the following:
         #   * Retrieve a copy of the currently enabled categories from the config (self.config.dict()["enabled"])
@@ -456,7 +456,7 @@ class CodingStyleGrading(SubmissionPage):
         """
         ## WARNING: EXPERIMENTAL
 
-        Calculates the mean of submission base grade + coding style grade mean
+        Finds the mean of submission base grade and coding style grade
         and updates its entry in the DB collection 'user_tasks', which is a collection
         that records top submissions for every user for every task.
 
@@ -486,7 +486,6 @@ class CodingStyleGrading(SubmissionPage):
         self.database.user_tasks.find_one_and_update(
             {"submissionid": submission["_id"]}, {"$set": {"grade": mean_grade}}
         )
-
         return submission
 
 
@@ -599,6 +598,8 @@ def init(
                 - id: <Category id>
                 name: <Name of category>
                 description: <Category description>
+            experimental:
+                merge_grades: false
 
     *name*
     Display name of the plugin
@@ -617,6 +618,14 @@ def init(
 
         *description*
         Category description
+
+    *experimental*
+    Experimental features to enable. These are not guaranteed to be robust,
+    and are subject to change in future versions.
+
+        *merge_grades*
+        Recalculates a submission's grade based on the mean of automated grade
+        and coding style grades. The weighting is 50% automated grade + 50% style grade average.
     """
     # Get config and make it global
     config = get_config(conf)
