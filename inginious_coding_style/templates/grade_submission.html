@@ -1,6 +1,10 @@
 {% extends "layout.html" %}
-<!-- Include htmx: https://htmx.org/ -->
+{% block head %}
+{{ super() }}
+{# Add htmx #}
 <script src="https://unpkg.com/htmx.org@1.5.0"></script>
+{% endblock %}
+
 
 {% block navbar %}
 <nav aria-label="breadcrumb">
@@ -56,7 +60,7 @@
     <p>Show submission and author info here?</p>
     <hr/>
     <div class="form-group">
-    <form action="/admin/codingstyle/{{submission._id}}" method="POST">
+    <form action="/admin/codingstyle/submission/{{submission._id}}" method="POST">
     {% for id, grade in grades.grades.items() %}
     <!-- Create new row every second index -->
     <!-- Is there a better way to do this? -->
@@ -64,16 +68,34 @@
         <div class="row m-1">
     {% endif %}
     <div class="col-md-5 p-4 mr-5 mb-5 border rounded">
-        <h3>
-            {% if id in config.enabled %}
-                {# prefer showing up-to-date name #}
-                {{ config.enabled[id].name }}
-            {% else %}
-                {# fall back on name stored in existing grade #}
-                {% set disabled = True %}
-                {{ grade.name }} (disabled)
+        <div class="row">
+            <div class="col-md-11">
+                <h3>
+                    {% if id in config.enabled %}
+                        {# prefer showing up-to-date name #}
+                        {{ config.enabled[id].name }}
+                    {% else %}
+                        {# fall back on name stored in existing grade #}
+                        {% set disabled = True %}
+                        {{ grade.name }} (disabled)
+                    {% endif %}
+                </h3>
+            </div>
+            {% if disabled %}
+            {# Show button to remove disabled category #}
+            <div class="col-md-1">
+                <button 
+                    type="button" 
+                    hx-put="/admin/codingstyle/submission/{{submission._id}}?remove={{id}}" 
+                    style=" border:none; background-color:white;"
+                    hx-swap="none"
+                >
+                    <i class="fa fa-window-close" style="color:lightcoral;">
+                    </i>
+                </button>
+            </div>
             {% endif %}
-        </h3>
+        </div>
         <p>
             {% if id in config.enabled %}
                 {{ config.enabled[id].description }}
@@ -105,17 +127,14 @@
     {% endif %}
     {% endfor %}
 
-    <!-- Display mean -->
+    <!-- Display mean grade -->
     <div class="col-md-12">
 
     {% if grades %}
-    <h4>mean:</h4>
+    <h4>Average:</h4>
     <p>{{grades.get_mean(config)}}</p>
     {% endif %}
 
-    
-
-    <!-- <button class="btn btn-primary" hx-post="/admin/codingstyle/{{submission._id}}"><i class="fa fa-save"></i> Submit</button> -->
     <input class="btn btn-primary" type="submit" value="Submit">
     </div>
     </form>

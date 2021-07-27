@@ -206,30 +206,51 @@ class CodingStyleGrading(SubmissionPage):
             f"/admin/codingstyle/submission/{submissionid}?success={1 if success else 0}"
         )
 
-    def put(self, submissionid: str, *args, **kwargs) -> str:
-        """We (ab)use Flask.views.MethodView here to add a PUT rule for the view here.
-        INGInious only implements their own GET_AUTH and POST_AUTH, so we use this method
-        to support partial updates of Coding Style Grades, such as updating only a single category
-        or removing a category altogether."""
+    def put(self, submissionid: str, *args, **kwargs) -> Union[str, Response]:
+        """We (ab)use the superclass `flask.views.MethodView` here to add a PUT rule for the view.
 
-        # Retrieve submission, then check permissions
+        INGInious only implements their own `GET_AUTH` and `POST_AUTH` methods,
+        so we use this method to add support for partial updates of Coding Style Grades,
+        such as updating only a single category or removing a category altogether.
+
+        Right now, the only supported operation is removing a grading category
+        from a submission.
+        """
+
+        # Retrieve submission, then check permissions.
         submission = self.submission_manager.get_submission(
             submissionid, user_check=False
         )
         self.get_course_and_check_rights(submission["courseid"], submission["taskid"])
 
+        # Check if a category should be removed
         if category := request.args.get("remove"):
             self.remove_category_from_submission(submission, category=category)
+            return Response(
+                "ok",
+                # Use htmx custom htmx header to prompt browser to refresh page
+                # Source: https://htmx.org/docs/#response-headers
+                headers={"HX-Refresh": "true"},
+            )
         # TODO: add other PUT operations
-
-        return f"ok"
-        # return redirect(f"/admin/codingstyle/submission/{submissionid}")
+        raise BadRequest("Unsupported operation")
 
     def remove_category_from_submission(
         self, submission: Submission, category: str
     ) -> None:
+        """Removes a category from a submission.
+        Does nothing if submission does not have a category with that name.
+
+        Parameters
+        ----------
+        submission : Submission
+            The submission to modify.
+        category : str
+            Name of the category to remove.
+        """
         submission = self.ensure_submission_custom_key(submission)
         submission["custom"][PLUGIN_KEY].remove_category(category)
+        self._update_submission(submission)
 
     def parse_form_data(self, form_data: ImmutableMultiDict) -> GradesIn:
         """Transforms flat form data into nested data that can be parsed

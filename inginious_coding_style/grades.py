@@ -77,6 +77,10 @@ class CodingStyleGrades(BaseModel):
             self.__root__.pop(category, None)
         elif isinstance(category, GradingCategory):
             self.__root__.pop(category.id, None)
+        # TODO: raise exception if invalid category?
+        raise TypeError(
+            "Argument 'category' must be of type 'str' or 'GradingCategory'."
+        )
 
     def get_mean(
         self,
@@ -131,7 +135,7 @@ DEFAULT_CATEGORIES = {
     "comments": GradingCategory(
         id="comments",
         name="Comments",
-        description="Use of comments.",
+        description="Appropriate use of comments.",
     ),
     "modularity": GradingCategory(
         id="modularity",
@@ -141,7 +145,7 @@ DEFAULT_CATEGORIES = {
     "structure": GradingCategory(
         id="structure",
         name="Structure",
-        description="The quality of the code's structure, i.e. comprehensible variable names, nesting, and program flow (????).",
+        description="The quality of the code's structure, i.e. comprehensible variable names, nesting, and program flow.",
     ),
     "idiomaticity": GradingCategory(
         id="idiomaticity",
