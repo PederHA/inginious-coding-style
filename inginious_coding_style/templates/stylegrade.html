@@ -1,7 +1,26 @@
 {% extends "layout.html" %}
 
+{% block column %}
+{{ super() }}
+<h3>{{ _("Information") }}</h3>
+<table class="table table-sm">
+    <tr>
+        <td>Submission author(s)</td>
+        <td>{{ user_realname }}</td>
+    </tr>
+    <tr>
+        <td>Task</td>
+        <td>{{ task.get_name(user_manager.session_language()) }}</td>
+    </tr>
+    <tr>
+        <td>Submitted</td>
+        <td>{{ submitted_on }}</td>
+    </tr>
+</table>
+{% endblock %}
+
 {% block navbar %}
-<!-- TODO: fix navbar -->
+<!-- TODO: fix navbar! Remove admin breadcrumb. -->
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{{get_homepath()}}/course/{{course.get_id()}}">{{
