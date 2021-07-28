@@ -108,15 +108,15 @@ INGInious Coding Style should be easy to use for both tutors and students. The p
 
 Find the submission to be graded.
 
-![Find the tasks](doc/img/01_tasks.png)
+![Find the tasks](/docs/docs/img/tutor-guide/01_tasksbutton.png)
 
 Click on the new "Grade Coding Style" button to access the grading interface.
 
-![Grading button](doc/img/02_grade_button.png)
+![Grading button](/docs/docs/img/tutor-guide/02_gradebutton.png)
 
 Add grades and feedback (optional) to submission. 
 
-![Grading interface](doc/img/03_gradingpage.png)
+![Grading interface](/docs/docs/img/tutor-guide/03_gradinginterface.png)
 
 ---
 
@@ -124,15 +124,20 @@ Add grades and feedback (optional) to submission.
 
 Students can get an overview of their coding style grades on the course's task list.
 
-![Task list showing grades](doc/img/04_overview.png)
+![Task list showing grades](/docs/docs/img/student-guide/01_tasklist.png)
 
 To view detailed feedback, students can click on the new "Coding Style Grades" button in the task menu. NOTE: The button is only visible if the submission's coding style has been graded.
 
-![Coding Style Grades task menu button](doc/img/05_studentbutton.png)
+![Coding Style Grades task menu button](/docs/docs/img/student-guide/02_newbutton.png)
 
 Detailed feedback is displayed similar to the admin grading interface.
 
-![Task list showing grades](doc/img/06_submissiongrades_1.png)
+![Task list showing grades](/docs/docs/img/student-guide/03_submission.png)
+
+
+## Known Issues
+
+* Not fully compatible with group submissions. Will only show the name of the first author listed for a submission.
 
 ## Developer Notes
 

@@ -1,0 +1,41 @@
+site_name: INGInious Coding Style
+site_description: A plugin for INGInious that allows tutors to grade several aspect of student submissions' coding style.
+site_url: https://github.com/PederHA/inginious-coding-style
+theme:
+  name: material
+  palette:
+  - scheme: default
+    primary: amber
+    accent: teal
+    toggle:
+      icon: material/lightbulb-outline
+      name: Switch to light mode
+  - scheme: slate
+    primary: amber
+    accent: teal
+    toggle:
+      icon: material/lightbulb
+      name: Switch to dark mode
+  features:
+  - search.suggest
+  - search.highlight
+  icon:
+    repo: fontawesome/brands/github-alt
+  logo: img/icon-white.svg
+  favicon: img/favicon.png
+  language: en
+repo_name: PederHA/inginious-coding-style
+repo_url: https://github.com/PederHA/inginious-coding-style
+edit_uri: ''
+nav:
+- INGInious Coding Style: index.md
+- Tutorial:
+  - tutorial/index.md
+  - tutorial/student-guide.md
+  - tutorial/tutor-guide.md
+markdown_extensions:
+- toc:
+    permalink: true
+- markdown_include.include:
+    base_path: docs
+- admonition

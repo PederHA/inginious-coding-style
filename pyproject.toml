@@ -12,6 +12,9 @@ pydantic = "^1.8.2"
 [tool.poetry.dev-dependencies]
 mypy = "^0.910"
 black = "^21.6b0"
+mkdocs = "^1.2.2"
+mkdocs-material = "^7.2.1"
+markdown-include = "^0.6.0"
 
 [build-system]
 requires = ["poetry>=0.12"]
