@@ -27,15 +27,20 @@ theme:
 repo_name: PederHA/inginious-coding-style
 repo_url: https://github.com/PederHA/inginious-coding-style
 edit_uri: ''
+# plugins:
+# - search
 nav:
 - INGInious Coding Style: index.md
+- configuration.md
 - Tutorial:
-  - tutorial/index.md
-  - tutorial/student-guide.md
   - tutorial/tutor-guide.md
+  - tutorial/student-guide.md
 markdown_extensions:
 - toc:
     permalink: true
+- markdown.extensions.codehilite:
+    guess_lang: false
 - markdown_include.include:
     base_path: docs
 - admonition
+- codehilite
