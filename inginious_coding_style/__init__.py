@@ -26,7 +26,7 @@ from .grades import CodingStyleGrades, get_grades
 from .logger import get_logger
 from .utils import (
     get_user_realname,
-    get_submission_submitted_on,
+    get_submission_timestamp,
     has_coding_style_grades,
     get_best_submission,
 )
@@ -75,7 +75,7 @@ class StudentSubmissionCodingStyle(INGIniousAuthPage):
             raise InternalServerError(msg)
 
         user_realname = get_user_realname(self, submission)
-        submitted_on = get_submission_submitted_on(submission)
+        submitted_on = get_submission_timestamp(submission)
 
         # TODO: handle group submissions
 
