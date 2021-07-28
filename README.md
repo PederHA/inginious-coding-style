@@ -1,4 +1,4 @@
-# INGInious Coding Style Grader
+# INGInious Coding Style
 
 A plugin for INGInious that allows tutors to grade several aspect of student submissions' coding style.
 
@@ -7,6 +7,11 @@ A plugin for INGInious that allows tutors to grade several aspect of student sub
 ```bash
 pip install inginious-coding-style
 ```
+
+## Documentation
+
+Full documentation can be found here: https://pederha.github.io/inginious-codig-style/
+
 
 ## Configuration
 
@@ -102,37 +107,7 @@ INGInious Coding Style should be easy to use for both tutors and students. The p
 
 (All design is subject to change.)
 
----
 
-### Adding Coding Style Grades (Admins & Tutors)
-
-Find the submission to be graded.
-
-![Find the tasks](/docs/docs/img/tutor-guide/01_tasksbutton.png)
-
-Click on the new "Grade Coding Style" button to access the grading interface.
-
-![Grading button](/docs/docs/img/tutor-guide/02_gradebutton.png)
-
-Add grades and feedback (optional) to submission. 
-
-![Grading interface](/docs/docs/img/tutor-guide/03_gradinginterface.png)
-
----
-
-### Checking Grades (Students)
-
-Students can get an overview of their coding style grades on the course's task list.
-
-![Task list showing grades](/docs/docs/img/student-guide/01_tasklist.png)
-
-To view detailed feedback, students can click on the new "Coding Style Grades" button in the task menu. NOTE: The button is only visible if the submission's coding style has been graded.
-
-![Coding Style Grades task menu button](/docs/docs/img/student-guide/02_newbutton.png)
-
-Detailed feedback is displayed similar to the admin grading interface.
-
-![Task list showing grades](/docs/docs/img/student-guide/03_submission.png)
 
 
 ## Known Issues
