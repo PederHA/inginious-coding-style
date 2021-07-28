@@ -10,6 +10,10 @@ Click on the new "Grade Coding Style" button to access the grading interface for
 
 ![Grading button](../img/tutor-guide/02_gradebutton.png)
 
-Add grades and (optionally) feedback to submission.
+Add grades and (optionally) feedback to the submission, then click "Submit".
 
 ![Grading interface](../img/tutor-guide/03_gradinginterface.png)
+
+A message is displayed at the top of the page denoting the status of the operation.
+
+![Successful update](../img/tutor-guide/04_success.png)
