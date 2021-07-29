@@ -5,13 +5,13 @@ theme:
   name: material
   palette:
   - scheme: default
-    primary: amber
+    primary: deep orange
     accent: teal
     toggle:
       icon: material/lightbulb-outline
       name: Switch to light mode
   - scheme: slate
-    primary: amber
+    primary: deep orange
     accent: teal
     toggle:
       icon: material/lightbulb
@@ -27,20 +27,24 @@ theme:
 repo_name: PederHA/inginious-coding-style
 repo_url: https://github.com/PederHA/inginious-coding-style
 edit_uri: ''
-# plugins:
-# - search
+plugins:
+- search
+- markdownextradata:
+    data: data
 nav:
 - INGInious Coding Style: index.md
+- installation.md
 - configuration.md
 - Tutorial:
   - tutorial/tutor-guide.md
   - tutorial/student-guide.md
+- developer-guide.md
 markdown_extensions:
 - toc:
     permalink: true
-- markdown.extensions.codehilite:
-    guess_lang: false
 - markdown_include.include:
     base_path: docs
 - admonition
-- codehilite
+- pymdownx.snippets
+- pymdownx.highlight
+- pymdownx.superfences
