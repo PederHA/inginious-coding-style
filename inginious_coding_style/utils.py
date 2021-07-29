@@ -2,9 +2,10 @@ from typing import Optional, TYPE_CHECKING
 
 from inginious.frontend.tasks import Task
 
+from ._types import Submission, HasUserManager
+
 if TYPE_CHECKING:
     from datetime import datetime
-    from ._types import Submission, HasUserManager
 
 
 def get_user_realname(obj: HasUserManager, submission: Submission) -> str:
