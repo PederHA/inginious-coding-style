@@ -1,5 +1,7 @@
 # Tutor Guide
 
+This section demonstrates how a tutor can access the grading interface for a specific assignment.
+
 ## Grade a Submission
 
 Click on the "Tasks" button to find the submission you want to grade.
