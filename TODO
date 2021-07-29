@@ -1,0 +1,12 @@
+* Maybe we actually DON'T need to pass config to CodingStyleGrades.get_mean()?
+  After all, we want to display the submission's average from when it was enabled.
+
+* Ability to remove coding style category from submission
+
+* Add submission info to sidebar
+
+Fix url, remove "usage", remove config params, move docs section to top.
+
+
+TODO:
+per-language/course categories

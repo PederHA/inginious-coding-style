@@ -3,6 +3,9 @@ name = "inginious-coding-style"
 version = "1.0.0"
 description = ""
 authors = ["Peder Hovdan Andresen <pedeha@stud.ntnu.no>"]
+readme = "README.md"
+repository = "https://github.com/PederHA/inginious-coding-style"
+documentation = "https://pederha.github.io/inginious-coding-style"
 
 [tool.poetry.dependencies]
 python = "^3.8"

@@ -33,7 +33,7 @@ from .utils import (
 if TYPE_CHECKING:
     from datetime import datetime
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 PLUGIN_PATH = Path(__file__).parent.absolute()
 TEMPLATES_PATH = PLUGIN_PATH / "templates"
