@@ -1,16 +1,8 @@
 import logging
-
-# try to use Python 3.9's cache decorator
-# TODO: test on python3.9
-try:
-    from functools import cache  # type: ignore
-except ImportError:
-    from functools import lru_cache, partial
-
-    cache = partial(lru_cache, None)  # fall back on lru_cache(None)
+from functools import lru_cache
 
 
-@cache()
+@lru_cache(None)
 def get_logger() -> logging.Logger:
     # We just copy the logging style of INGInious here, because
     # plugins are loaded before the INGInious logger is configured.
