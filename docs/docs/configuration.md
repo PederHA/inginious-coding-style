@@ -101,7 +101,7 @@ This feature is not comprehensively tested, and does not have all its features f
 INGInious Coding Style comes with {{ categories.categories | length }} default grading categories. If you want to change the names or descriptions of these categories, you can override them in your INGInious configuration file.
 
 !!! attention
-    The `id` parameter of a category must match if you wish to overwrite a default category. If you simply wish to disable a default category, ommit its ID from the top-level `enabled` parameter.
+    The `id` parameter of a category must match if you wish to overwrite a default category. If you simply wish to disable a default category, omit its ID from the top-level `enabled` parameter.
 
 The default categories are defined as follows:
 
