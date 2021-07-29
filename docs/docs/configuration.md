@@ -119,7 +119,7 @@ The default categories are defined as follows:
 
 ## Default Categories YAML Snippet
 
-The following is a YAML snippet that can be added to the plugin configuration if you want to make changes to all the default categories:
+The following is a YAML snippet that includes the definitions for all default categories, which can be added to the plugin configuration should you wish to expand on the existing decriptions or otherwise modify the categories:
 
 ```YAML
 --8<-- "data/categories.yml"
