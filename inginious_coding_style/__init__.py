@@ -24,7 +24,7 @@ from .config import PluginConfig, get_config
 from .grades import CodingStyleGrades, get_grades
 from .logger import get_logger
 from .utils import (
-    get_user_realname,
+    get_submission_authors_realname,
     get_submission_timestamp,
     has_coding_style_grades,
     get_best_submission,
@@ -71,15 +71,13 @@ class StudentSubmissionCodingStyle(INGIniousAuthPage):
             self._logger.exception(msg)
             raise InternalServerError(msg)
 
-        user_realname = get_user_realname(self, submission)
+        names = get_submission_authors_realname(self, submission)
         submitted_on = get_submission_timestamp(submission)
-
-        # TODO: handle group submissions
 
         return self.template_helper.render(
             "stylegrade.html",
             template_folder=TEMPLATES_PATH,
-            user_realname=user_realname,
+            submission_authors=names,
             submitted_on=submitted_on,
             user_manager=self.user_manager,
             course=course,
@@ -155,7 +153,8 @@ class CodingStyleGrading(SubmissionPage):
         submission = self.ensure_submission_custom_key(submission)
         grades = submission["custom"][PLUGIN_KEY]  # type: CodingStyleGrades
 
-        user_realname = get_user_realname(self, submission)
+        authors = get_submission_authors_realname(self, submission)
+        submitted_on = get_submission_timestamp(submission)
 
         # Check if page is displayed after updating submission grades
         # Display alert denoting success of update:
@@ -165,8 +164,9 @@ class CodingStyleGrading(SubmissionPage):
         return self.template_helper.render(
             "grade_submission.html",
             template_folder=TEMPLATES_PATH,
-            # TODO: check how this works with group submissions
-            user_realname=user_realname,
+            user_manager=self.user_manager,
+            submitted_on=submitted_on,
+            authors=authors,
             course=course,
             task=task,
             submission=submission,

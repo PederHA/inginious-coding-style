@@ -59,9 +59,7 @@ plugins:
       merge_grades: false
 ```
 
-## Known Issues
-
-* Not fully compatible with group submissions. Will only show the name of the first author listed for a submission.
+<!-- ## Known Issues -->
 
 ## Developer Notes
 

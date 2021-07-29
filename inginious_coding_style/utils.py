@@ -1,4 +1,4 @@
-from typing import Optional, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING
 
 from inginious.frontend.tasks import Task
 
@@ -8,15 +8,26 @@ if TYPE_CHECKING:
     from datetime import datetime
 
 
-def get_user_realname(obj: HasUserManager, submission: Submission) -> str:
-    """Retrieves the real name of the author of a submission."""
-    # TODO: handle group submissions
-    user_realname = None
-    try:
-        user_realname = obj.user_manager.get_user_realname(submission["username"][0])
-    except (IndexError, KeyError):
-        obj._logger.error(f"Unable to get username for submission {submission}.")
-    return user_realname or "Unknown user"
+def get_submission_authors_realname(
+    obj: HasUserManager, submission: Submission
+) -> List[str]:
+    """Retrieves a list of the real names of a submission's authors."""
+    DEFAULT = "Unknown user"
+    names = []
+
+    # Handle missing submission authors (or invalid type of submission["username"])
+    if not submission.get("username") or not isinstance(submission["username"], list):
+        return [DEFAULT]
+
+    for name in submission["username"]:
+        try:
+            name = obj.user_manager.get_user_realname(submission["username"][0])
+        except (IndexError, KeyError):
+            obj._logger.error(f"Unable to get username for submission {submission}.")
+            name = DEFAULT
+        names.append(name)
+
+    return names
 
 
 def get_submission_timestamp(submission: Submission) -> str:

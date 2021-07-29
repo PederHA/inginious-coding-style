@@ -6,7 +6,10 @@
 <table class="table table-sm">
     <tr>
         <td>Submission author(s)</td>
-        <td>{{ user_realname }}</td>
+        <td>{% for author in submission_authors %}
+            <p>{{ author }}</p>
+            {% endfor %}
+        </td>
     </tr>
     <tr>
         <td>Task</td>

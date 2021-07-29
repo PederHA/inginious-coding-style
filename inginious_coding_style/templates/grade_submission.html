@@ -5,6 +5,27 @@
 <script src="https://unpkg.com/htmx.org@1.5.0"></script>
 {% endblock %}
 
+{% block column %}
+{{ super() }}
+<h3>{{ _("Information") }}</h3>
+<table class="table table-sm">
+    <tr>
+        <td>Submission author(s)</td>
+        <td>{% for author in authors %}
+            <p>{{ author }}</p>
+            {% endfor %}
+        </td>
+    </tr>
+    <tr>
+        <td>Task</td>
+        <td>{{ task.get_name(user_manager.session_language()) }}</td>
+    </tr>
+    <tr>
+        <td>Submitted</td>
+        <td>{{ submitted_on }}</td>
+    </tr>
+</table>
+{% endblock %}
 
 {% block navbar %}
 <nav aria-label="breadcrumb">
