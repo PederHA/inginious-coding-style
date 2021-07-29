@@ -1,6 +1,8 @@
 # INGInious Coding Style
 
-A plugin for INGInious that allows tutors to grade several aspect of student submissions' coding style.
+INGInious Coding Style is a plugin for INGInious that allows tutors to grade several aspect of student submissions' coding style.
+
+INGInious Coding Style should be easy to use for both tutors and students. The plugin adds new buttons and displays to various existing menus in the application that can be used to add and view coding style grades.
 
 ## Documentation
 
@@ -15,13 +17,13 @@ pip install inginious-coding-style
 
 ## Configuration
 
-INGInious Coding Style is highly configurable, and provides granular control over which grading categories are enabled, as well as their names and descriptions. 
+INGInious Coding Style is highly configurable and provides granular control over which grading categories are enabled, as well as the names and descriptions of the categories.
 
-Furthermore, experimental support for modifying the total grade of a submission by calculating the mean of `(automated_grade + coding_style_grades)` is also available, although it is currently not guaranteed to be bug-free.
+Furthermore, experimental and cutting-edge features are made available in the `experimental` section. It is not advised to enable these settings in production. When these features are production-ready, they are moved out of the `experimental` section
 
 ### Minimal Configuration
 
-If you only want to use the default configuration, you can add the following to your INGInious configuration file:
+The following YAML snippet provides the default plugin configuration, and is a good starting point for exploring the plugin's functionality:
 
 ```yml
 plugins: 
@@ -56,59 +58,6 @@ plugins:
     experimental:
       merge_grades: false
 ```
-
-### Parameters
-
-#### `name`
-
-Display name of the plugin
-
----
-
-#### `enabled` (optional)
-
-Which coding style categories to enable. Omitting this parameter enables all default categories (`comments`, `modularity`, `structure`, `idiomaticity`).
-
----
-
-#### `categories` (optional)
-
-Define new categories or redefine default categories.
-
-##### `id`
-
-Unique ID of category.
-
-##### `name` (optional)
-
-Display name of category. Defaults to `id.title()` if omitted.
-
-##### `description`
-
-Category description.
-
----
-
-#### `experimental`
-
-Experimental options
-
-##### `merge_grades`
-
-Modifies a submission's displayed grade by finding the mean of automated grading done by INGInious and Coding Style grades: 
-
-`new_grade = (automated_grade + coding_style_grade_mean) / 2`
-
----
-
-## Usage
-
-INGInious Coding Style should be easy to use for both tutors and students. The plugin adds new buttons and displays to various existing menus in the application that can be used to add and view grades.
-
-(All design is subject to change.)
-
-
-
 
 ## Known Issues
 
