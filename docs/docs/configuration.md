@@ -6,7 +6,7 @@ Furthermore, experimental and cutting-edge features are made available in the `e
 
 ## Minimal Configuration
 
-The following YAML snipped provides the default plugin configuration, and is a good starting point to explore the plugin's functionality:
+The following YAML snippet provides the default plugin configuration, and is a good starting point for exploring the plugin's functionality:
 
 ```YAML
 plugins: 
