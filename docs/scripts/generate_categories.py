@@ -3,15 +3,21 @@ import sys
 from yaml import load, dump
 from yaml import Dumper
 
-
+# Set up directories
 SCRIPT_PATH = Path(__file__).parent.absolute()
+
+# Directory to store category data
 DATA_DIR = SCRIPT_PATH.parent / "data"
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+# Lets us import modules from the plugin
 PLUGIN_DIR = SCRIPT_PATH.parent.parent
 sys.path.append(str(PLUGIN_DIR))
 
 from inginious_coding_style.grades import DEFAULT_CATEGORIES
 
 
+# Custom dumper that matches style used by INGInious config.
 class FixedIndentDumper(Dumper):
     def increase_indent(self, flow=False, *args, **kwargs):
         return super().increase_indent(flow=flow, indentless=False)
