@@ -2,16 +2,16 @@
 
 A plugin for INGInious that allows tutors to grade several aspect of student submissions' coding style.
 
+## Documentation
+
+Full documentation can be found here: https://pederha.github.io/inginious-coding-style/
+
+
 ## Installation
 
 ```bash
 pip install inginious-coding-style
 ```
-
-## Documentation
-
-Full documentation can be found here: https://pederha.github.io/inginious-codig-style/
-
 
 ## Configuration
 
