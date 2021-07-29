@@ -20,7 +20,6 @@ from werkzeug.exceptions import BadRequest, Forbidden, InternalServerError, NotF
 from werkzeug.wrappers.response import Response
 
 from ._types import GradesIn, Submission
-from .cache import BestSubmissionCache
 from .config import PluginConfig, get_config
 from .grades import CodingStyleGrades, get_grades
 from .logger import get_logger
@@ -42,8 +41,6 @@ PLUGIN_KEY = "coding_style"  # NOTE: use plugin name from config?
 
 # Makes plugin config available globally
 PLUGIN_CONFIG: PluginConfig = None  # type: ignore
-
-BEST_SUBMISSION_CACHE = BestSubmissionCache()  # FIXME: UNUSED
 
 
 class StudentSubmissionCodingStyle(INGIniousAuthPage):
