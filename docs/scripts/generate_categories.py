@@ -6,7 +6,7 @@ from yaml import Dumper
 
 SCRIPT_PATH = Path(__file__).parent.absolute()
 DATA_DIR = SCRIPT_PATH.parent / "data"
-PLUGIN_DIR = SCRIPT_PATH.parent.parent / "inginious_coding_style"
+PLUGIN_DIR = SCRIPT_PATH.parent.parent
 sys.path.append(str(PLUGIN_DIR))
 
 from inginious_coding_style.grades import DEFAULT_CATEGORIES
