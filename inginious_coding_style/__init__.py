@@ -478,7 +478,7 @@ class CodingStyleGrading(SubmissionPage):
 
 
 def submission_admin_menu(
-    course: Course, submission: Submission, template_helper: TemplateHelper
+    course: Course, task: Task, submission: Submission, template_helper: TemplateHelper
 ) -> str:
     return template_helper.render(
         "submission_admin_menu.html",
@@ -489,7 +489,6 @@ def submission_admin_menu(
 
 def task_list_item(
     course: Course,
-    taskid: str,
     task: Task,
     tasks_data: Any,
     template_helper: TemplateHelper,
