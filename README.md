@@ -61,6 +61,12 @@ plugins:
 
 <!-- ## Known Issues -->
 
+## TODO
+
+- [ ] Add clickable link to coding style grades for each task in task list.
+<!-- - [x] Complete -->
+<!-- - [ ] Incomplete -->
+
 ## Developer Notes
 
 This plugin uses [htmx](https://htmx.org/) to provide some interactivity.
