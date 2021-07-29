@@ -58,7 +58,8 @@ Display name of the plugin
 
 ### `enabled` (optional)
 
-Which coding style categories to enable. Omitting this parameter enables all default categories (`comments`, `modularity`, `structure`, `idiomaticity`).
+Which coding style categories to enable. Omitting this parameter enables all default categories ({% for category in categories.categories %} 
+[`{{ category.id }}`](#{{ category.id }}){% endfor %}).
 
 ---
 
@@ -82,11 +83,11 @@ Description of category. This should describe the criteria used for grading.
 
 ### `experimental`
 
-Experimental options
+Experimental options that are not yet production-ready, but are implemented to a degree that makes them usable.
 
 #### `merge_grades`
 
-Modifies a submission's displayed grade by finding the mean of automated grading done by INGInious and Coding Style grades: 
+Modifies a submission's displayed grade by finding the mean of automated grading done by INGInious and Coding Style grades:
 
 `new_grade = (automated_grade + coding_style_grade_mean) / 2`
 
