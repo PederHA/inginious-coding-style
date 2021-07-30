@@ -505,7 +505,7 @@ def task_list_item(
     try:
         grades = get_grades(best_submission["custom"][PLUGIN_KEY])  # type: ignore
     except (TypeError, KeyError, ValidationError) as e:
-        if isinstance(e, ValidationError):
+        if isinstance(e, ValidationError) and best_submission is not None:
             get_logger().warning(
                 f"Cannot parse coding style grades of submission {best_submission['_id']}."
             )
