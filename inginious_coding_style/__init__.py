@@ -357,7 +357,7 @@ class CodingStyleGrading(SubmissionPage):
 
     def update_submission_grades(
         self, submissionid: str, grades_data: GradesIn
-    ) -> Submission:
+    ) -> Optional[Submission]:
         """Attempts to update a submission with a new set of coding style grades.
 
         Raises `ValidationError` if grades cannot be validated.
@@ -417,14 +417,11 @@ class CodingStyleGrading(SubmissionPage):
 
         return self._update_submission(submission)
 
-    def _update_submission(self, submission: Submission) -> Submission:
+    def _update_submission(self, submission: Submission) -> Optional[Submission]:
         """Finds an existing submission and updates it with new data.
 
-        Returns updated submission.
+        Returns updated submission or None if submission was not found.
         """
-        # NOTE: Optional[Submission] return type annotation? We should never be in a situation
-        # where we are able to call this method on a nonexistent submission, though.
-
         submission = deepcopy(submission)  # copy submission before modifying
         grades = submission["custom"][PLUGIN_KEY]
 
