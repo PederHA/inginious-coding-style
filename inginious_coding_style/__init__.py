@@ -1,7 +1,7 @@
 import time
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Dict, List, Optional, OrderedDict, Tuple, Union, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, OrderedDict, Union, TYPE_CHECKING
 
 from bson.errors import InvalidId
 from flask import redirect, request
@@ -29,9 +29,6 @@ from .utils import (
     has_coding_style_grades,
     get_best_submission,
 )
-
-if TYPE_CHECKING:
-    from datetime import datetime
 
 __version__ = "1.0.1"
 
