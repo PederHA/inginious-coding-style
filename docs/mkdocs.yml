@@ -38,7 +38,7 @@ nav:
 - Tutorial:
   - tutorial/tutor-guide.md
   - tutorial/student-guide.md
-- developer-guide.md
+# - developer-guide.md
 - changelog.md
 markdown_extensions:
 - toc:
