@@ -69,82 +69,83 @@
 
 <div class="container-fluid">
     <h1 class="card-title"> Coding Style Grades</h1>
-    <p>Show submission and author info here?</p>
     <hr/>
     <div>
     {% for id, grade in grades.grades.items() %}
-    <!-- Create new row every second index -->
-    <!-- Is there a better way to do this? -->
-    {% if loop.index0 % 2 == 0 %}
-        <div class="row m-1">
-    {% endif %}
+        <!-- Create new row every second index -->
+        <!-- Is there a better way to do this? -->
+        {% if loop.index0 % 2 == 0 %}
+            <div class="row m-1 mt-5">
+        {% endif %}
     
-    <!-- Grade Box -->
-    <div class="col-md-5 p-4 mr-5 mb-5 border">
-        <h3>
-            <!-- Unlike grading page, we always show the stored description/name. -->
-            {% if id in config.enabled %}
-                {% set disabled = False %}
-            {% else %}
-                {% set disabled = True %}
-            {% endif %}
-            {{ grade.name }} {% if disabled %} (disabled) {% endif %}
-        </h3>
-        <p>
-            {{ grade.description }}
-        </p>
+        <!-- Grade Box -->
+        <div class="col-md-5 p-4 mr-5 border">
+            <h3>
+                <!-- Unlike grading page, we always show the stored description/name. -->
+                {% if id in config.enabled %}
+                    {% set disabled = False %}
+                {% else %}
+                    {% set disabled = True %}
+                {% endif %}
+                {{ grade.name }} {% if disabled %} (disabled) {% endif %}
+            </h3>
+            <p>
+                {{ grade.description }}
+            </p>
 
-        <!-- Display grade frame -->
-        <div class="row">
-            <div class="col-md-12">
-                <label for="{{id}}_grade"><h5>Grade:</h5></label>
-                <br>
-                <div class="row">
-                    <div class="col-md-6">
-                        <p>{{ grade.grade }} / 100</p>
+            <!-- Display grade frame -->
+            <div class="row">
+                <div class="col-md-12">
+                    <label for="{{id}}_grade"><h5>Grade:</h5></label>
+                    <br>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p>{{ grade.grade }} / 100</p>
+                        </div>
                     </div>
-                </div>
 
-                {% if grade.feedback %}
-                <div class="row pt-3">
-                    <div class="col-md-12">
-                        <label for="{{id}}_feedback"><h5>Feedback:</h5></label>
-                        <br>  
-                        <!-- Show feedback (if any) -->
-                        
-                        <p id="{{id}}_feedback" class="border p-2" {% if disabled %} readonly {% endif %}>
-                            {% if grade.feedback %}
-                                {{ grade.feedback }}
-                            {% else %}
-                                <br>
+                    {% if grade.feedback %}
+                    <div class="row pt-3">
+                        <div class="col-md-12">
+                            <label for="{{id}}_feedback"><h5>Feedback:</h5></label>
+                            <br>  
+                            <!-- Show feedback (if any) -->
+                            
+                            <p id="{{id}}_feedback" class="border p-2" {% if disabled %} readonly {% endif %}>
+                                {%- if grade.feedback -%}
+                                    {{ grade.feedback }}
+                                {%- else -%}
+                                    <br>
+                                {%- endif -%}
+                            </p>
+                            
+                            {% if disabled %}
+                                <small>NOTE: This category was enabled when the submission was graded, but has since been disabled or renamed.</small>
                             {% endif %}
-                        </p>
-                        
-
-                        {% if disabled %}
-                            <small>NOTE: This category was enabled when the submission was graded, but has since been disabled or renamed.</small>
-                        {% endif %}
+                        </div>
                     </div>
+                    {% endif %}
                 </div>
+            </div>
+        </div>
+    
+    {% if loop.index % 2 == 0 or loop.last -%}
+        </div>
+    {%- endif -%}
+
+    {% endfor %}
+
+
+    <!-- Display mean -->
+        <!-- Display mean grade -->
+        <div class="row">
+            <div class="col-md-12 p-4 ">
+                {% if grades %}
+                <h4>Average:</h4>
+                <p>{{grades.get_mean(config) | int}} / 100</p>
                 {% endif %}
             </div>
         </div>
     </div>
-
-    {% if loop.index % 2 == 0 %}
-        </div>
-    {% endif %}
-    {% endfor %}
-
-    <!-- Display mean -->
-    <div class="col-md-12">
-
-    {% if grades %}
-    <h4>Mean style grade:</h4>
-    <p>{{grades.get_mean(config) | int }} / 100</p>
-    {% endif %}
-
-    </div>
-</div>
 </div>
 {% endblock %}
