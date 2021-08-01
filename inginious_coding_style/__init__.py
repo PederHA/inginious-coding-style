@@ -30,7 +30,7 @@ from .utils import (
     get_best_submission,
 )
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 PLUGIN_PATH = Path(__file__).parent.absolute()
 TEMPLATES_PATH = PLUGIN_PATH / "templates"
