@@ -6,4 +6,5 @@ INGInious Coding Style can be installed through pip:
 pip install inginious-coding-style
 ```
 
-After the plugin has been installed, we can move on to configuring it.
+!!! attention
+    The plugin requires INGInious 0.7 or higher. It is possible that it works on previous versions of INGInious, but it has not been tested. Adding support for previous versions is not currently planned.
