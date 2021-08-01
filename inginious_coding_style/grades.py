@@ -65,7 +65,9 @@ class CodingStyleGrades(BaseModel):
         """
         self.__root__[category.id] = category
 
-    def remove_category(self, category: Union[str, GradingCategory]) -> None:
+    def remove_category(
+        self, category: Union[str, GradingCategory]
+    ) -> Optional[GradingCategory]:
         """Removes a grading category.
 
         Parameters
@@ -74,9 +76,9 @@ class CodingStyleGrades(BaseModel):
             Name of category or a `GradingCategory` object.
         """
         if isinstance(category, str):
-            self.__root__.pop(category, None)
+            return self.__root__.pop(category, None)
         elif isinstance(category, GradingCategory):
-            self.__root__.pop(category.id, None)
+            return self.__root__.pop(category.id, None)
         # TODO: raise exception if invalid category?
         raise TypeError(
             "Argument 'category' must be of type 'str' or 'GradingCategory'."
