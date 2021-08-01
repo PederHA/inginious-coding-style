@@ -24,6 +24,12 @@
         <td>Submitted</td>
         <td>{{ submitted_on }}</td>
     </tr>
+    {% if grades %}
+    <tr>
+        <td>Mean style grade</td>
+        <td>{{grades.get_mean(config)}} / 100</td>
+    </tr>
+    {% endif %}
 </table>
 {% endblock %}
 
