@@ -59,13 +59,11 @@
 </nav>
 {% endblock %}
 
-
-
 <!-- Display grading categories -->
 {% block content %}
 
-{% if success is not none %}
-    {% if success == '1' %}
+{%- if success is not none -%}
+    {%- if success == '1' -%}
     <div class="alert alert-success" role="alert">
         Successfully updated submission.
     </div>
@@ -74,99 +72,124 @@
         Failed to update submission.
     </div>    
     {% endif %}
-{% endif %}
+{%- endif %}
 
 <div class="container-fluid">
-    <h1 class="card-title"> Coding Style Grading for Submission {{ submission._id }} </h1>
-    <p>Show submission and author info here?</p>
+    <h1 class="card-title"> Coding Style Grading</h1>
+    <p>Add grades to each category and optionally give feedback.</p>
     <hr/>
-    <div class="form-group">
-    <form action="/admin/codingstyle/submission/{{submission._id}}" method="POST">
-    {% for id, grade in grades.grades.items() %}
-    <!-- Create new row every second index -->
-    <!-- Is there a better way to do this? -->
-    {% if loop.index0 % 2 == 0 %}
-        <div class="row m-1">
-    {% endif %}
-    <div class="col-md-5 p-4 mr-5 mb-5 border rounded">
-        <div class="row">
-            <div class="col-md-11">
-                <h3>
-                    {% if id in config.enabled %}
-                        {# prefer showing up-to-date name #}
-                        {{ config.enabled[id].name }}
-                    {% else %}
-                        {# fall back on name stored in existing grade #}
-                        {% set disabled = True %}
-                        {{ grade.name }} (disabled)
-                    {% endif %}
-                </h3>
-            </div>
-            {% if disabled %}
-            {# Show button to remove disabled category #}
-            <div class="col-md-1">
-                <button 
-                    type="button" 
-                    hx-put="/admin/codingstyle/submission/{{submission._id}}?remove={{id}}" 
-                    style=" border:none; background-color:white;"
-                    hx-swap="none"
-                >
-                    <i class="fa fa-window-close" style="color:lightcoral;">
-                    </i>
-                </button>
-            </div>
-            {% endif %}
-        </div>
-        <p>
-            {% if id in config.enabled %}
-                {{ config.enabled[id].description }}
-            {% else %}
-                {{ grade.description }}
-            {% endif %}
-        </p>
+    
+    <form action="/admin/codingstyle/submission/{{submission._id}}" method="POST">   
+        {% for id, grade in grades.grades.items() %}
+        
+        <!-- Create new row every second index -->
+        <!-- Is there a better way to do this? -->
+        {% if loop.index0 % 2 == 0 -%}
+            <div class="row m-1">
+        {% endif %}
+        
+        <div class="col-md-5 p-4 mr-5 mb-5 border">
+            <div class="col-md-12 pt-1">
+                <!-- Grading Category Name Row -->
+                <div class="row">
+                    <div class="col-md-11">
+                        <h3>{%- if id in config.enabled -%}
+                                {#- Prefer showing up-to-date name -#}
 
-        <!-- Display grade input -->
+                                {{ config.enabled[id].name }}
+
+                            {%- else -%}
+                                {#- Fall back on name stored in existing grade -#}
+                                
+                                {% set disabled = True %}
+                                {{ grade.name }} (disabled)
+
+                            {%- endif -%}
+                        </h3>
+                    </div>
+
+                    <div class="col-md-1">
+                        {%- if disabled -%}
+
+                        {#- Show button to remove disabled category -#}
+                            <button 
+                                type="button" 
+                                hx-put="/admin/codingstyle/submission/{{submission._id}}?remove={{id}}" 
+                                style=" border:none; background-color:white;"
+                                hx-swap="none"
+                                data-toggle="tooltip" 
+                                data-placement="top" 
+                                title="Remove grade from submission"
+                            >
+                                <i class="fa fa-window-close" style="color:lightcoral;">
+                                </i>
+                            </button>
+                        {%- endif -%}
+                    </div>
+                </div>
             
-            <label for="{{id}}_grade">Grade:</label>
-            <br>
-            <div class="row">
-                <div class="col-md-2">
-                    <input class="form-control" type="number" id="{{id}}_grade" name="{{id}}_grade" min="0" max="100" value={{grade.grade}} {% if disabled %} readonly {% endif %}>
+                <!-- Grading Category Description row -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <p>
+                            {%- if id in config.enabled -%}
+                                {{ config.enabled[id].description }}
+                            {%- else -%}
+                                {{ grade.description }}
+                            {%- endif -%}
+                        </p>
+                    </div>
+                </div>
+                <!-- Grade input-->
+                <div class="form-group w-25">
+                    <label for="{{id}}_grade">Grade:</label>
+                    <input 
+                        class="form-control input-sm" 
+                        type="number" 
+                        id="{{id}}_grade" 
+                        name="{{id}}_grade" 
+                        min="0" 
+                        max="100" 
+                        value={{grade.grade}} 
+                        {% if disabled %} readonly {% endif %}
+                    >
+                </div>
+
+                <!-- Feedback text area -->
+                <div class="form-group">
+                    <label for="{{id}}_feedback">Feedback:</label>
+                    <textarea
+                        class="form-control"
+                        id="{{id}}_feedback"
+                        name="{{id}}_feedback"
+                        rows="4"
+                        cols="50"
+                        {% if disabled %} readonly {%- endif -%}
+                    >{{ grade.feedback }}</textarea>
+                    {%- if disabled -%}
+                        <small>NOTE: This category has been disabled and will not contribute to the submission's grade.</small>
+                    {% endif %}
                 </div>
             </div>
-            <br>
-            <label for="{{id}}_feedback">Feedback:</label>
-            <br>
-            <textarea class="form-control" id="{{id}}_feedback" name="{{id}}_feedback" rows="4" cols="50" {% if disabled %} readonly {% endif %}>{{ grade.feedback }}</textarea>
-            {% if disabled %}
-                <small>NOTE: This category has been disabled and will not contribute to the submission's grade.</small>
-            {% endif %}
-    </div>
-    <!-- <div class="col-md-1"></div> -->
-    {% if loop.index % 2 == 0 %}
         </div>
-    {% endif %}
-    {% endfor %}
 
-    <!-- Display mean grade -->
-    <div class="col-md-12">
+        {% if loop.index % 2 == 0 or loop.last -%}
+            </div>
+        {%- endif -%}
 
-    {% if grades %}
-    <h4>Average:</h4>
-    <p>{{grades.get_mean(config)}}</p>
-    {% endif %}
+        {% endfor %}
 
-    <input class="btn btn-primary" type="submit" value="Submit">
-    </div>
+        <!-- Display mean grade + submit button -->
+        <div class="row">
+            <div class="col-md-12 p-4 ">
+                {% if grades %}
+                <h4>Average:</h4>
+                <p>{{grades.get_mean(config)}}</p>
+                {% endif %}
+                <input class="btn btn-primary" type="submit" value="Submit">
+            </div>
+        </div>
     </form>
-</div>
+
 </div>
 {% endblock %}
-
-
-{#         <!-- Try to fetch name and description from running config if possible -->
-    {% if config.enabled.get(id) %}
-        </h1>{{ config.enabled[id].name }}</h1>
-    {% else %}
-        
-    {% endif %} #}
