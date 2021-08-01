@@ -91,10 +91,10 @@
         <!-- Create new row every second index -->
         <!-- Is there a better way to do this? -->
         {% if loop.index0 % 2 == 0 -%}
-            <div class="row m-1">
+            <div class="row m-1 mt-5">
         {% endif %}
         
-        <div class="col-md-5 p-4 mr-5 mb-5 border">
+        <div class="col-md-5 p-4 mr-5 border">
             <div class="col-md-12 pt-1">
                 <!-- Grading Category Name Row -->
                 <div class="row">
@@ -187,7 +187,7 @@
 
         <!-- Display mean grade + submit button -->
         <div class="row">
-            <div class="col-md-12 p-4 ">
+            <div class="col-md-12 p-4">
                 {% if grades %}
                 <h4>Average:</h4>
                 <p>{{grades.get_mean(config)}}</p>
