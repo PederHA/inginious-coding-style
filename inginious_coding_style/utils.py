@@ -1,15 +1,16 @@
 from typing import List, Optional, TYPE_CHECKING
 
 from inginious.frontend.tasks import Task
+from inginious.frontend.pages.utils import INGIniousPage
 
-from ._types import Submission, HasUserManager
+from ._types import Submission
 
 if TYPE_CHECKING:
     from datetime import datetime
 
 
 def get_submission_authors_realname(
-    obj: HasUserManager, submission: Submission
+    obj: INGIniousPage, submission: Submission
 ) -> List[str]:
     """Retrieves a list of the real names of a submission's authors."""
     DEFAULT = "Unknown user"
