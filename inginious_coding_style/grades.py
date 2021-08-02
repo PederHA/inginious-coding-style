@@ -11,11 +11,6 @@ from pydantic import BaseModel, Field, validator
 from ._types import GradesIn
 
 
-class Grade(BaseModel):
-    grade: int = Field(default=100, ge=0, le=100)
-    feedback: str = Field(default="", max_length=5000)  # prevent unbounded text input
-
-
 class GradingCategory(BaseModel):
     """Represents a grading category."""
 
