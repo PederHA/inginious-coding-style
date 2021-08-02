@@ -64,6 +64,10 @@ plugins:
 ## TODO
 
 - [ ] Add clickable link to coding style grades for each task in task list.
+- [ ] Add ability to enable/disable categories on a per-course basis.
+- [ ] Add ability to enable/disable plugin on a per course-basis.
+- [ ] Maybe we actually DON'T need to pass config to CodingStyleGrades.`get_mean()`? After all, we probably want to display the submission's mean grade at the point it was graded, not the mean grade based on the _currently_ enabled categories.
+
 <!-- - [x] Complete -->
 <!-- - [ ] Incomplete -->
 
