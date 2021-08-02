@@ -76,7 +76,7 @@
     {% else %}
     <div class="alert alert-danger" role="alert">
         Failed to update submission.
-    </div>    
+    </div>
     {% endif %}
 {%- endif %}
 
@@ -84,16 +84,16 @@
     <h1 class="card-title"> Coding Style Grading</h1>
     <p>Add grades to each category and optionally give feedback.</p>
     <hr/>
-    
-    <form action="/admin/codingstyle/submission/{{submission._id}}" method="POST">   
+
+    <form action="/admin/codingstyle/submission/{{submission._id}}" method="POST">
         {% for id, grade in grades.grades.items() %}
-        
+
         <!-- Create new row every second index -->
         <!-- Is there a better way to do this? -->
         {% if loop.index0 % 2 == 0 -%}
             <div class="row m-1 mt-5">
         {% endif %}
-        
+
         <div class="col-md-5 p-4 mr-5 border">
             <div class="col-md-12 pt-1">
                 <!-- Grading Category Name Row -->
@@ -106,7 +106,7 @@
 
                             {%- else -%}
                                 {#- Fall back on name stored in existing grade -#}
-                                
+
                                 {% set disabled = True %}
                                 {{ grade.name }} (disabled)
 
@@ -118,13 +118,13 @@
                         {%- if disabled -%}
 
                         {#- Show button to remove disabled category -#}
-                            <button 
-                                type="button" 
-                                hx-put="/admin/codingstyle/submission/{{submission._id}}?remove={{id}}" 
+                            <button
+                                type="button"
+                                hx-put="/admin/codingstyle/submission/{{submission._id}}?remove={{id}}"
                                 style=" border:none; background-color:white;"
                                 hx-swap="none"
-                                data-toggle="tooltip" 
-                                data-placement="top" 
+                                data-toggle="tooltip"
+                                data-placement="top"
                                 title="Remove grade from submission"
                             >
                                 <i class="fa fa-window-close" style="color:lightcoral;">
@@ -133,7 +133,7 @@
                         {%- endif -%}
                     </div>
                 </div>
-            
+
                 <!-- Grading Category Description row -->
                 <div class="row">
                     <div class="col-md-12">
@@ -149,14 +149,14 @@
                 <!-- Grade input-->
                 <div class="form-group w-25">
                     <label for="{{id}}_grade">Grade:</label>
-                    <input 
-                        class="form-control input-sm" 
-                        type="number" 
-                        id="{{id}}_grade" 
-                        name="{{id}}_grade" 
-                        min="0" 
-                        max="100" 
-                        value={{grade.grade}} 
+                    <input
+                        class="form-control input-sm"
+                        type="number"
+                        id="{{id}}_grade"
+                        name="{{id}}_grade"
+                        min="0"
+                        max="100"
+                        value={{grade.grade}}
                         {% if disabled %} readonly {% endif %}
                     >
                 </div>

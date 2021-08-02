@@ -26,7 +26,7 @@ Furthermore, experimental and cutting-edge features are made available in the `e
 The following YAML snippet provides the default plugin configuration, and is a good starting point for exploring the plugin's functionality:
 
 ```yml
-plugins: 
+plugins:
 -   plugin_module: inginious_coding_style
     name: "INGInious Coding Style"
 ```
@@ -36,7 +36,7 @@ plugins:
 Below is an example of a configuration making use of all available configuration options.
 
 ```yml
-plugins: 
+plugins:
 -   plugin_module: inginious_coding_style
     name: "INGInious Coding Style"
     enabled:

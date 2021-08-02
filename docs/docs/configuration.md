@@ -9,13 +9,13 @@ Furthermore, experimental and cutting-edge features are made available in the `e
 The following YAML snippet provides the default plugin configuration, and is a good starting point for exploring the plugin's functionality:
 
 ```YAML
-plugins: 
+plugins:
 -   plugin_module: inginious_coding_style
     name: "INGInious Coding Style"
 ```
 
 The minimal configuration enables all default categories:
-{% for category in categories.categories %} 
+{% for category in categories.categories %}
 [`{{ category.id }}`](#{{ category.id }}){% endfor %}.
 
 See [Default Categories](#default-categories) for more information about the default categories.
@@ -25,7 +25,7 @@ See [Default Categories](#default-categories) for more information about the def
 Below is an example of a configuration making use of all available configuration options.
 
 ```YAML
-plugins: 
+plugins:
 -   plugin_module: inginious_coding_style
     name: "INGInious Coding Style"
     enabled:
@@ -58,7 +58,7 @@ Display name of the plugin
 
 ### `enabled` (optional)
 
-Which coding style categories to enable. Omitting this parameter enables all default categories ({% for category in categories.categories %} 
+Which coding style categories to enable. Omitting this parameter enables all default categories ({% for category in categories.categories %}
 [`{{ category.id }}`](#{{ category.id }}){% endfor %}).
 
 ---

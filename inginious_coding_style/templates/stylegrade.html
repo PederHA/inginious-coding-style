@@ -77,7 +77,7 @@
         {% if loop.index0 % 2 == 0 %}
             <div class="row m-1 mt-5">
         {% endif %}
-    
+
         <!-- Grade Box -->
         <div class="col-md-5 p-4 mr-5 border">
             <h3>
@@ -108,9 +108,9 @@
                     <div class="row pt-3">
                         <div class="col-md-12">
                             <label for="{{id}}_feedback"><h5>Feedback:</h5></label>
-                            <br>  
+                            <br>
                             <!-- Show feedback (if any) -->
-                            
+
                             <p id="{{id}}_feedback" class="border p-2" {% if disabled %} readonly {% endif %}>
                                 {%- if grade.feedback -%}
                                     {{ grade.feedback }}
@@ -118,7 +118,7 @@
                                     <br>
                                 {%- endif -%}
                             </p>
-                            
+
                             {% if disabled %}
                                 <small>NOTE: This category was enabled when the submission was graded, but has since been disabled or renamed.</small>
                             {% endif %}
@@ -128,7 +128,7 @@
                 </div>
             </div>
         </div>
-    
+
     {% if loop.index % 2 == 0 or loop.last -%}
         </div>
     {%- endif -%}
