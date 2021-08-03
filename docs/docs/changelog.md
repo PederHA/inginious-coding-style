@@ -2,6 +2,14 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
+## 1.1.1 (Aug 3rd, 2021)
+
+### Fixed
+
+- Attempting to remove an inactive category raising an exception due to not using the new Pydantic Submission model.
+
+- Student grades page navbar breadcrumb.
+
 ## 1.1.0 (Aug 3rd, 2021)
 
 ### Added
