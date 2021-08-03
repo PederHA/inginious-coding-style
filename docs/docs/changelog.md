@@ -2,6 +2,18 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
+## 1.1.0 (Aug 3rd, 2021)
+
+### Added
+
+- Shared exception handling functionality for subclasses of `INGIniousPage`.
+
+- Exception handler for `ValidationError` exceptions. Currently logs the exception and displays Internal Server Error in the browser.
+
+### Changed
+
+- Submissions are now validated with Pydantic. This makes it easier to reason with the code, as there is now a distinction between a raw submission returned by the INGInious `SubmissionManager` and a submission that has been parsed by the plugin and been assigned a `CodingStyleGrades` object.
+
 ## 1.0.2 (Aug 1st, 2021)
 
 ### Added
