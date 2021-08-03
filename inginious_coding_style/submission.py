@@ -10,6 +10,8 @@ from .logger import get_logger
 
 
 class Custom(BaseModel):
+    """Represents the contents of an INGInious submission's `"custom"` key."""
+
     coding_style_grades: CodingStyleGrades = Field(default_factory=CodingStyleGrades)
 
     class Config:
@@ -44,7 +46,7 @@ class Submission(BaseModel):
     grade: float
 
     class Config:
-        arbitrary_types_allowed = True # support ObjectId
+        arbitrary_types_allowed = True  # support ObjectId
         extra = "allow"  # we don't validate the other dict keys
 
     @validator("custom", pre=True)

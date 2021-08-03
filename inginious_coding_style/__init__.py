@@ -29,7 +29,7 @@ from .utils import (
     get_submission_timestamp,
 )
 
-__version__ = "1.0.2"
+__version__ = "1.1.0"
 
 PLUGIN_PATH = Path(__file__).parent.absolute()
 TEMPLATES_PATH = PLUGIN_PATH / "templates"
