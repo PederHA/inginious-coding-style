@@ -1,5 +1,5 @@
 from typing import Tuple
-from inginious.frontend.pages.utils import INGIniousAuthPage
+from inginious.frontend.pages.utils import INGIniousPage
 from pydantic import ValidationError
 from werkzeug.exceptions import InternalServerError
 
@@ -11,6 +11,6 @@ def handle_validation_error(exc: ValidationError) -> Tuple[str, int]:
     raise InternalServerError("Validation error")
 
 
-def init_exception_handlers(obj: INGIniousAuthPage) -> None:
+def init_exception_handlers(obj: INGIniousPage) -> None:
     # This function can be expanded with additional exception handlers
     obj.app.register_error_handler(ValidationError, handle_validation_error)
