@@ -194,10 +194,9 @@ class CodingStyleGrading(SubmissionPage):
         """
 
         # Retrieve submission, then check permissions.
-        submission = self.submission_manager.get_submission(
-            submissionid, user_check=False
-        )
-        self.get_course_and_check_rights(submission["courseid"], submission["taskid"])
+        sub = self.submission_manager.get_submission(submissionid, user_check=False)
+        submission = get_submission(sub)
+        self.get_course_and_check_rights(submission.courseid, submission.taskid)
 
         # Check if a category should be removed
         if category := request.args.get("remove"):
