@@ -80,11 +80,13 @@ class StudentSubmissionCodingStyle(INGIniousAuthPage):
         except Exception as e:
             if not submission.courseid:
                 self._logger.error(
-                    f"Submission {submission._id} is not associated with any course. Has the submission been corrupted?"
+                    f"Submission {submission._id} is not associated with any course. "
+                    "Has the submission been corrupted?"
                 )
             else:
                 self._logger.error(
-                    f"Unable to find course with course ID {submission.courseid}. Has it been deleted?"
+                    f"Unable to find course with course ID {submission.courseid}. "
+                    "Has it been deleted?"
                 )
             raise InternalServerError("Unable to display submission.")
         return course
@@ -95,11 +97,13 @@ class StudentSubmissionCodingStyle(INGIniousAuthPage):
         except Exception as e:
             if not submission.taskid:
                 self._logger.error(
-                    f"Submission {submission._id} is not associated with a task. Has the submission been corrupted?"
+                    f"Submission {submission._id} is not associated with a task. "
+                    "Has the submission been corrupted?"
                 )
             else:
                 self._logger.error(
-                    f"Unable to find task with task ID {submission.taskid}. Has it been deleted?"
+                    f"Unable to find task with task ID {submission.taskid}. "
+                    "Has it been deleted?"
                 )
             raise InternalServerError("Unable to display submission.")
         return task
@@ -367,7 +371,10 @@ class CodingStyleGrading(SubmissionPage):
 
 
 def submission_admin_menu(
-    course: Course, task: Task, submission: Submission, template_helper: TemplateHelper
+    course: Course,
+    task: Task,
+    submission: OrderedDict[str, Any],
+    template_helper: TemplateHelper,
 ) -> str:
     return template_helper.render(
         "submission_admin_menu.html",
