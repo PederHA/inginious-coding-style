@@ -63,9 +63,18 @@ plugins:
 
 ## TODO
 
-- [ ] Make each coding style grade progress bar on `/course/<courseid>` a clickable element that links to the relevant coding style grades page (`/submission/<submissionid>/codingstyle`) for the relevant task.
+### User Features
+
+- [ ] Make each coding style grade progress bar on `/course/<courseid>` a clickable element that links to the relevant coding style grades page (`/submission/<submissionid>/codingstyle`) for
+the relevant task.
+
+### Plugin Configuration
+
 - [ ] Add ability to enable/disable grading categories on a per-course basis.
 - [ ] Add ability to enable/disable plugin on a per course-basis.
+
+### Implementation Details
+
 - [ ] Maybe we actually DON'T need to pass config to `CodingStyleGrades.get_mean()`? After all, we probably want to display the submission's mean grade at the point it was graded, not the mean grade based on the _currently_ enabled categories.
 
 <!-- - [x] Complete -->
