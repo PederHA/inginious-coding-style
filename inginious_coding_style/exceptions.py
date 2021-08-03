@@ -1,4 +1,3 @@
-from typing import Tuple
 from inginious.frontend.pages.utils import INGIniousPage
 from pydantic import ValidationError
 from werkzeug.exceptions import InternalServerError
@@ -6,7 +5,7 @@ from werkzeug.exceptions import InternalServerError
 from .logger import get_logger
 
 
-def handle_validation_error(exc: ValidationError) -> Tuple[str, int]:
+def handle_validation_error(exc: ValidationError) -> None:
     get_logger().error("A Pydantic validation error occured", exc_info=exc)
     raise InternalServerError("Validation error")
 

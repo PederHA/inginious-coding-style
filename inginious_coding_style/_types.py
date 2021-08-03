@@ -1,4 +1,4 @@
-from typing import Any, Dict, Union, OrderedDict
+from typing import Dict, Union
 
 
 # Grades from a single category
