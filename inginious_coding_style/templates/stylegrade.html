@@ -29,34 +29,13 @@
 {% endblock %}
 
 {% block navbar %}
-<!-- TODO: fix navbar! Remove admin breadcrumb. -->
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{get_homepath()}}/course/{{course.get_id()}}">{{
-                course.get_name(user_manager.session_language()) }}</a></li>
-        <li class="breadcrumb-item">
-            <a href="{{get_homepath()}}/admin/{{course.get_id()}}" title="{{ _('Administration') }}"
-                data-toggle="tooltip" data-placement="bottom">
-                <i class="fa fa-user-secret"></i>
-            </a>
-        </li>
-        <li class="breadcrumb-item">
-            <a href="{{get_homepath()}}/admin/{{course.get_id()}}/students" title="{{ _('Students') }}"
-                data-toggle="tooltip" data-placement="bottom">
-                <i class="fa fa-user"></i>
-            </a>
-        </li>
-        <li class="breadcrumb-item"><a href="{{get_homepath()}}/admin/{{course.get_id()}}/student/{{username}}">{{
-                user_realname }}</a>
-        </li>
-        <li class="breadcrumb-item"><a
-                href="{{get_homepath()}}/admin/{{course.get_id()}}/submissions?users={{username}}&tasks={{task.get_id()}}">{{
-                task.get_name(user_manager.session_language()) }}</a></li>
-        <li class="breadcrumb-item"><a href="{{get_homepath()}}/submission/{{submission._id}}">{{ submission['_id'] |
-                string }}<span class="sr-only">{{ _("(current)")
-                    }}</span></a></li>
-        <li class="breadcrumb-item active"><a href="#">Coding Style<span
-                    class="sr-only">(current)</span></a></li>
+        <li class="breadcrumb-item"><a href="{{ get_homepath() }}/mycourses" title="{{ _('My courses') }}" data-toggle="tooltip" data-placement="bottom"><i class="fa fa-th-list"></i></a></li>
+        <li class="breadcrumb-item"><a href="{{ get_homepath() }}/course/{{ course.get_id() }}">{{ course.get_name(user_manager.session_language()) }}</a></li>
+        <li class="breadcrumb-item"><a href="{{ get_homepath() }}/course/{{ course.get_id() }}/{{ task.get_id() }}">{{ task.get_name(user_manager.session_language()) }}</a></li>
+        <li class="breadcrumb-item"><a href="{{ get_homepath() }}/submission/{{ submission._id }}">Submission</a></li>
+        <li class="breadcrumb-item active"><a href="{{ get_homepath() }}/submission/{{ submission._id }}/codingstyle">Coding Style Grades <span class="sr-only">{{ _("(current)") }}</span></a></li>
     </ol>
 </nav>
 {% endblock %}
