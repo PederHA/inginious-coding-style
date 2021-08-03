@@ -112,7 +112,7 @@ class CodingStyleGrades(BaseModel):
             return round(avg, ndigits)
         return avg
 
-    def dict(self) -> Dict[str, GradingCategory]:  # type: ignore
+    def dict(self, *args, **kwargs) -> Dict[str, GradingCategory]:  # type: ignore
         """Returns a dict version of its own `__root__` attribute."""
         return super().dict()["__root__"]
 
@@ -126,6 +126,16 @@ def get_grades(
     # of CodingStyleGrades objects elsewhere in the plugin, if this is the
     # canonical way to create CodingStyleGrades objects.
     return CodingStyleGrades.parse_obj(grades)
+
+
+def add_config_categories(
+    grades: CodingStyleGrades, config: PluginConfig
+) -> CodingStyleGrades:
+    """Makes sure all enabled categories are added to a `CodingStyleGrades` object."""
+    for category_id, category in config.enabled.items():
+        if category_id not in grades:
+            grades.add_category(category)
+    return grades
 
 
 DEFAULT_CATEGORIES = {

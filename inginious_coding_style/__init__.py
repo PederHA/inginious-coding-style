@@ -1,7 +1,6 @@
 import time
-from copy import deepcopy
 from pathlib import Path
-from typing import Any, Dict, List, Optional, OrderedDict, Union, TYPE_CHECKING
+from typing import Any, Dict, List, OrderedDict, Union
 
 from bson.errors import InvalidId
 from flask import redirect, request
@@ -14,29 +13,26 @@ from inginious.frontend.plugin_manager import PluginManager
 from inginious.frontend.tasks import Task
 from inginious.frontend.template_helper import TemplateHelper
 from pydantic import ValidationError
-from pymongo.collection import ReturnDocument
 from werkzeug.datastructures import ImmutableMultiDict
 from werkzeug.exceptions import BadRequest, Forbidden, InternalServerError, NotFound
 from werkzeug.wrappers.response import Response
 
-from ._types import GradesIn, Submission
+from ._types import GradesIn
 from .config import PluginConfig, get_config
-from .grades import CodingStyleGrades, get_grades
+from .exceptions import init_exception_handlers
+from .grades import add_config_categories, get_grades
 from .logger import get_logger
+from .submission import Submission, get_submission
 from .utils import (
+    get_best_submission,
     get_submission_authors_realname,
     get_submission_timestamp,
-    has_coding_style_grades,
-    get_best_submission,
 )
 
 __version__ = "1.0.2"
 
 PLUGIN_PATH = Path(__file__).parent.absolute()
 TEMPLATES_PATH = PLUGIN_PATH / "templates"
-
-# The key to store style grade data in the submission's "custom" dict
-PLUGIN_KEY = "coding_style"  # NOTE: use plugin name from config?
 
 # Makes plugin config available globally
 PLUGIN_CONFIG: PluginConfig = None  # type: ignore
@@ -51,6 +47,7 @@ class StudentSubmissionCodingStyle(INGIniousAuthPage):
     def __init__(self, config: PluginConfig, *args, **kwargs) -> None:
         self.config = config
         super().__init__(*args, **kwargs)
+        init_exception_handlers(self)
 
     def GET_AUTH(self, submissionid: str) -> str:
         """Displays all coding style grades for a given course for a user."""
@@ -58,17 +55,8 @@ class StudentSubmissionCodingStyle(INGIniousAuthPage):
         course = self.get_course(submission)
         task = self.get_task(submission, course)
 
-        if not has_coding_style_grades(submission, PLUGIN_KEY):
+        if not submission.custom.coding_style_grades:
             raise NotFound("Submission has no coding style grades.")
-
-        try:
-            grades = get_grades(submission["custom"][PLUGIN_KEY])
-        except ValidationError:
-            msg = (
-                f"Unable to process coding style grades for submission {submissionid}."
-            )
-            self._logger.exception(msg)
-            raise InternalServerError(msg)
 
         names = get_submission_authors_realname(self, submission)
         submitted_on = get_submission_timestamp(submission)
@@ -82,45 +70,43 @@ class StudentSubmissionCodingStyle(INGIniousAuthPage):
             course=course,
             task=task,
             submission=submission,
-            grades=grades,
+            grades=submission.custom.coding_style_grades,
             config=self.config,
         )
 
     def get_course(self, submission: Submission) -> Course:
         try:
-            courseid = submission.get("courseid")
-            course = self.course_factory.get_course(courseid)
+            course = self.course_factory.get_course(submission.courseid)
         except Exception as e:
-            if not courseid:
+            if not submission.courseid:
                 self._logger.error(
-                    f"Submission {submission['_id']} is not associated with any course. Has the submission been corrupted?"
+                    f"Submission {submission._id} is not associated with any course. Has the submission been corrupted?"
                 )
             else:
                 self._logger.error(
-                    f"Unable to find course with course ID {courseid}. Has it been deleted?"
+                    f"Unable to find course with course ID {submission.courseid}. Has it been deleted?"
                 )
             raise InternalServerError("Unable to display submission.")
         return course
 
     def get_task(self, submission: Submission, course: Course) -> Task:
         try:
-            taskid = submission.get("taskid")
-            task = course.get_task(taskid)
+            task = course.get_task(submission.taskid)
         except Exception as e:
-            if not taskid:
+            if not submission.taskid:
                 self._logger.error(
-                    f"Submission {submission['_id']} is not associated with a task. Has the submission been corrupted?"
+                    f"Submission {submission._id} is not associated with a task. Has the submission been corrupted?"
                 )
             else:
                 self._logger.error(
-                    f"Unable to find task with task ID {taskid}. Has it been deleted?"
+                    f"Unable to find task with task ID {submission.taskid}. Has it been deleted?"
                 )
             raise InternalServerError("Unable to display submission.")
         return task
 
     def get_submission(self, submissionid: str) -> Submission:
         """Slimmed down version of SubmissionPage.fetch_submission.
-        Only returns Submission, instead of Tuple[Course, Task, Submission]"""
+        Only returns Submission, instead of Tuple[Course, Task, OrderedDict]"""
 
         try:
             submission = self.submission_manager.get_submission(submissionid, False)
@@ -129,7 +115,7 @@ class StudentSubmissionCodingStyle(INGIniousAuthPage):
         except InvalidId as ex:
             self._logger.info("Invalid ObjectId : %s", submissionid)
             raise Forbidden(description=_("Invalid ObjectId."))
-        return submission
+        return get_submission(submission)
 
 
 class CodingStyleGrading(SubmissionPage):
@@ -140,17 +126,20 @@ class CodingStyleGrading(SubmissionPage):
     def __init__(self, config: PluginConfig, *args, **kwargs) -> None:
         self.config = config
         super().__init__(*args, **kwargs)
+        init_exception_handlers(self)
 
     def GET_AUTH(self, submissionid: str) -> str:
         """Displays coding style grading page for a specific submission."""
-        course, task, submission = self.fetch_submission(submissionid)
+        course, task, sub = self.fetch_submission(submissionid)
 
-        # Ensure the submission has a CodingStyleGrades object at ["custom"][PLUGIN_KEY].
-        # Loads existing style grades or creates new.
-
-        # TODO: use has_coding_style_grades()?
-        submission = self.ensure_submission_custom_key(submission)
-        grades = submission["custom"][PLUGIN_KEY]  # type: CodingStyleGrades
+        # Validate submission and check if it has coding style grades
+        submission = get_submission(sub)
+        grades = submission.custom.coding_style_grades
+        if not grades:
+            grades = get_grades(self.config.enabled)
+        # Add any missing grading categories
+        grades = add_config_categories(grades, self.config)
+        submission.custom.coding_style_grades = grades
 
         authors = get_submission_authors_realname(self, submission)
         submitted_on = get_submission_timestamp(submission)
@@ -169,7 +158,7 @@ class CodingStyleGrading(SubmissionPage):
             course=course,
             task=task,
             submission=submission,
-            grades=grades,
+            grades=submission.custom.coding_style_grades,
             config=self.config,
             success=success,
         )
@@ -215,7 +204,7 @@ class CodingStyleGrading(SubmissionPage):
             self.remove_category_from_submission(submission, category=category)
             return Response(
                 "ok",
-                # Use htmx custom htmx header to prompt browser to refresh page
+                # Use custom htmx HTTP header to prompt browser to refresh page
                 # Source: https://htmx.org/docs/#response-headers
                 headers={"HX-Refresh": "true"},
             )
@@ -235,8 +224,7 @@ class CodingStyleGrading(SubmissionPage):
         category : str
             Name of the category to remove.
         """
-        submission = self.ensure_submission_custom_key(submission)
-        submission["custom"][PLUGIN_KEY].remove_category(category)
+        submission.custom.coding_style_grades.remove_category(category)
         self._update_submission(submission)
 
     def parse_form_data(self, form_data: ImmutableMultiDict) -> GradesIn:
@@ -275,86 +263,9 @@ class CodingStyleGrading(SubmissionPage):
                 out[category] = {attr: v}
         return out
 
-    def ensure_submission_custom_key(self, submission: Submission) -> Submission:
-        """Adds or instantiates data structure for custom grades to a submission.
-
-        Stores existing custom submission data (if it exists) under `submission["custom"]["original"]`,
-        if existing custom data is not a dict.
-
-        Updates the submission's database record if coding style grades datastructure
-        is added to the submission.
-
-        ### Rationale:
-
-        There is no formal interface for adding custom data to a submission,
-        or indeed any specific structure that should be adhered to, so essentially any plugin can
-        add whatever they want to the "custom" key as long as it is serializable,
-        and can as a result overwrite other plugins' custom submission data with impunity.
-
-        This method makes sure the value for the "custom" key of an INGInious submission is a dict.
-        By default the value is an empty string, but if we let this value be a dict,
-        multiple plugins can add data to the dict under their own key, which avoids conflicts.
-
-        Of course, this doesn't alleviate the problem of other plugins overwriting our data,
-        but it's a convention that should probably be suggested to the INGInious devs.
-
-        ### In practice the result is:
-
-        ```py
-        submission = {
-            "_id": ...
-            "grade": ...
-            # ...
-            "custom": {
-                "coding_style": CodingStyleGrades(...) # our plugin's data
-                "other_plugin": ..., # other plugin's data
-            }
-        }
-        ```
-        """
-
-        # Check contents of "custom" key
-        if not submission.get("custom"):
-            submission["custom"] = {}
-        elif not isinstance(submission["custom"], dict):
-            submission["custom"] = {"original": submission["custom"]}
-            # TODO: find out how to get id value from MongoDB ObjectId object
-            self._logger.info(
-                f"Stored previous custom value under submission['custom']['original'] for submission {submission}. "
-                "Ensure another plugin is not overwriting custom submission data."
-            )
-
-        # Check if submission has existing coding style grades
-        submission_modified = False
-        g = submission["custom"].get(PLUGIN_KEY)
-        try:
-            # Try to parse existing grades (if any)
-            grades = get_grades(g)
-        except ValidationError:
-            # Create new grades from enabled categories in config
-            grades = get_grades(self.config.enabled)
-            submission_modified = True
-
-        # Ensure all enabled grading categories are added to the submission's custom grades
-        for category in self.config.enabled.values():
-            if category not in grades:
-                grades.add_category(category)
-                submission_modified = True
-
-        # Finally add the CodingStyleGrade object to the submission
-        submission["custom"][PLUGIN_KEY] = grades
-
-        if submission_modified:
-            self._update_submission(submission)
-
-        # From here, we can be certain submission["custom"][PLUGIN_KEY]
-        # is a CodingStyleGrades object
-
-        return submission
-
     def update_submission_grades(
         self, submissionid: str, grades_data: GradesIn
-    ) -> Optional[Submission]:
+    ) -> None:
         """Attempts to update a submission with a new set of coding style grades.
 
         Raises `ValidationError` if grades cannot be validated.
@@ -377,10 +288,8 @@ class CodingStyleGrading(SubmissionPage):
             Unable to validate new grades.
         """
         # Get the submission
-        submission = self.submission_manager.get_submission(
-            submissionid, user_check=False
-        )
-        submission = self.ensure_submission_custom_key(submission)
+        sub = self.submission_manager.get_submission(submissionid, user_check=False)
+        submission = get_submission(sub)
 
         # Add grade data to the submission
         #
@@ -407,36 +316,26 @@ class CodingStyleGrading(SubmissionPage):
             if category not in grades:
                 continue  # skip disabled grades
             grades[category].update(grades_data[category])
-
         # Validate new grades and add them to the submission
         # If validation fails, ValidationError is raised
-        submission["custom"][PLUGIN_KEY] = get_grades(grades)
+        submission.custom.coding_style_grades = get_grades(grades)
 
-        return self._update_submission(submission)
+        self._update_submission(submission)
 
-    def _update_submission(self, submission: Submission) -> Optional[Submission]:
+    def _update_submission(self, submission: Submission) -> None:
         """Finds an existing submission and updates it with new data.
 
-        Returns updated submission or None if submission was not found.
+        Returns updated submission, or None if submission was not found.
         """
-        submission = deepcopy(submission)  # copy submission before modifying
-        grades = submission["custom"][PLUGIN_KEY]
-
         if self.config.experimental.merge_grades:
             self.merge_submission_grades(submission)
 
-        if isinstance(grades, CodingStyleGrades):
-            # Convert grades object to dict if it is a CodingStyleGrades instance
-            # so that MongoDB is able to serialize the data.
-            submission["custom"][PLUGIN_KEY] = grades.dict()
-
-        return self.database.submissions.find_one_and_update(
-            {"_id": submission["_id"]},
-            {"$set": submission},
-            return_document=ReturnDocument.AFTER,
+        self.database.submissions.find_one_and_update(
+            {"_id": submission._id},
+            {"$set": submission.dict()},
         )
 
-    def merge_submission_grades(self, submission: Submission) -> Submission:
+    def merge_submission_grades(self, submission: Submission) -> None:
         """
         ## WARNING: EXPERIMENTAL
 
@@ -457,20 +356,15 @@ class CodingStyleGrading(SubmissionPage):
         Submission's new grade calculation:
         `merged = (base_grade + style_mean) / 2`
         """
-        # grades needs to be a CodingStyleGrades object to correctly retrieve the mean grade.
-        grades = submission["custom"][PLUGIN_KEY]
-        if not isinstance(grades, CodingStyleGrades):
-            grades = get_grades(grades)
-
-        base_grade = submission["grade"]
+        grades = submission.custom.coding_style_grades
+        base_grade = submission.grade
         style_mean = grades.get_mean(self.config, round_grade=False)
         mean_grade = round(base_grade + style_mean) / 2
 
         # Update the 'user_tasks' collection (where top submissions are stored)
         self.database.user_tasks.find_one_and_update(
-            {"submissionid": submission["_id"]}, {"$set": {"grade": mean_grade}}
+            {"submissionid": submission._id}, {"$set": {"grade": mean_grade}}
         )
-        return submission
 
 
 def submission_admin_menu(
@@ -491,19 +385,11 @@ def task_list_item(
 ) -> str:
     """Displays a progress bar denoting the current coding style grade for a given task."""
     # TODO: optimize. Cache best submission?
-    start = time.perf_counter()
     best_submission = get_best_submission(task)
+    if not best_submission or not best_submission.custom.coding_style_grades:
+        return ""
 
-    # NOTE: display best coding style grade or coding style grade of best submission?
-
-    try:
-        grades = get_grades(best_submission["custom"][PLUGIN_KEY])  # type: ignore
-    except (TypeError, KeyError, ValidationError) as e:
-        if isinstance(e, ValidationError) and best_submission is not None:
-            get_logger().warning(
-                f"Cannot parse coding style grades of submission {best_submission['_id']}."
-            )
-        return ""  # Don't display anything
+    grades = best_submission.custom.coding_style_grades
 
     return template_helper.render(
         "task_list_item.html",
@@ -515,9 +401,8 @@ def task_list_item(
 
 def task_menu(course: Course, task: Task, template_helper: TemplateHelper) -> str:
     best_submission = get_best_submission(task)
-    if best_submission is None or not has_coding_style_grades(
-        best_submission, PLUGIN_KEY
-    ):
+    # Render blank if no submission or no coding style grades are found
+    if best_submission is None or not best_submission.custom.coding_style_grades:
         return ""
 
     return template_helper.render(
