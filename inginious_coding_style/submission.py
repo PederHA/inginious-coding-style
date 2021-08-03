@@ -16,13 +16,17 @@ class Custom(BaseModel):
 
     class Config:
         # We don't care about other custom entries but we can't discard them
-        # because it might contain data from other plugins.
+        # because they might contain data from other plugins that we have to include
+        # when serializing the object (to store in the database).
         extra = "allow"
 
     @validator("coding_style_grades", pre=True)
     def get_style_grades(
         cls, grades: Union[CodingStyleGrades, GradesIn]
     ) -> Optional[CodingStyleGrades]:
+        """Attempts to parse `grades` as a `CodingStylesGrade`.
+        Falls back on `None` if grades cannot be validated.
+        If `None` is returned, the field's default factory is called."""
         if isinstance(grades, CodingStyleGrades):
             return grades
         try:
@@ -37,13 +41,28 @@ class Custom(BaseModel):
 class Submission(BaseModel):
     """Represents an INGInious submission."""
 
+    # Attributes are defined based on the following:
+    # https://docs.inginious.org/en/v0.7/dev_doc/internals_doc/submissions.html#state
+    # Attributes annotated with `Any` give us IDE auto-completion without
+    # the model doing any sort of validation of the values.
+
     _id: ObjectId
     courseid: str
     taskid: str
+    status: Any
     submitted_on: datetime = Field(default_factory=datetime.now)
-    custom: Custom
     username: List[str]
+    response_type: Any
+    input: Any
+    archive: Any
+    custom: Custom
     grade: float
+    problems: Any
+    result: Any
+    state: Any
+    stderr: Any
+    stdout: Any
+    text: Any
 
     class Config:
         arbitrary_types_allowed = True  # support ObjectId
