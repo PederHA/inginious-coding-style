@@ -49,7 +49,6 @@ class CodingStyleGrades(BaseModel):
     def grades(self) -> Dict[str, GradingCategory]:
         return self.__root__
 
-    # TODO: rename to add_grade?
     def add_category(self, category: GradingCategory) -> None:
         """Adds a grading category
 
