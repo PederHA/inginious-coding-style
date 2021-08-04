@@ -4,8 +4,10 @@ version = "1.1.1"
 description = ""
 authors = ["Peder Hovdan Andresen <pedeha@stud.ntnu.no>"]
 readme = "README.md"
+license = "AGPL-3.0-or-later"
 repository = "https://github.com/PederHA/inginious-coding-style"
 documentation = "https://pederha.github.io/inginious-coding-style"
+classifiers = ["Programming Language :: Python :: 3.8", "Topic :: Education"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
