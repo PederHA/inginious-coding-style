@@ -82,6 +82,7 @@ class Submission(BaseModel):
             custom = {"original": custom}
         return custom
 
+    @property
     def is_group_submission(self) -> bool:
         return len(self.username) > 1
 
