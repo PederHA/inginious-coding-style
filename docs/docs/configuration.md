@@ -45,7 +45,9 @@ plugins:
         name: Kommentering
         description: Hvor godt kommentert koden er.
     experimental:
-      merge_grades: false
+      merge_grades:
+        enabled: False
+        weighting: 0.50
 ```
 
 ## Parameters
@@ -89,9 +91,16 @@ Experimental options that are not yet production-ready, but are implemented to a
 
 Modifies a submission's displayed grade by finding the mean of automated grading done by INGInious and Coding Style grades:
 
-`new_grade = (automated_grade + coding_style_grade_mean) / 2`
+`new_grade = (automated_grade * (1 - weighting)) + (coding_style_grade_mean * weighting)`
 
 This feature is not comprehensively tested, and does not have all its features fully implemented on the frontend. As such, it is currently not advised to enable this feature.
+##### `enabled`
+
+Enable grade merging
+
+##### `weighting`
+
+Weighting of coding style grades in new grade calculation. Default: 0.50
 
 <!-- Only display this section if we have generated data/categories.-->
 {% if categories %}

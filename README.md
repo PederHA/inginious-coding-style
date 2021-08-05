@@ -56,7 +56,9 @@ plugins:
         name: Kommentering
         description: Hvor godt kommentert koden er.
     experimental:
-      merge_grades: false
+      merge_grades:
+        enabled: False
+        weighting: 0.50
 ```
 
 <!-- ## Known Issues -->

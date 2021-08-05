@@ -5,9 +5,13 @@ from .logger import get_logger
 from .grades import GradingCategory, DEFAULT_CATEGORIES
 
 
+class MergeGradesSetting(BaseModel):
+    enabled: bool = False
+    weighting: float = Field(ge=0.01, le=1.00, default=0.50)
+
+
 class ExperimentalSettings(BaseModel):
-    merge_grades: bool = False
-    # automatic_grading: bool = False # NYI (obviously)
+    merge_grades: MergeGradesSetting = Field(default_factory=MergeGradesSetting)
     # other experimental settings here...
 
 

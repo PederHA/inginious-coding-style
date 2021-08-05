@@ -346,6 +346,8 @@ class CodingStyleGrading(SubmissionPage):
         and updates its entry in the DB collection 'user_tasks', which is a collection
         that records top submissions for every user for every task.
 
+        Weights coding style grades according to weighting defined in plugin config.
+
         NOTE: This method has no effect if the submission that is being graded is
         _not_ the user's top submission for the given task. This is due to the way
         INGInious seems to store a sort of "meta-submission" in the 'user_tasks'
@@ -355,18 +357,20 @@ class CodingStyleGrading(SubmissionPage):
         and thus it is also the one we are modifying in this method.
         Furthermore, it makes no sense to grade a submission that ISN'T the user's
         best submission, so that is also relevant!
-
-        Submission's new grade calculation:
-        `merged = (base_grade + style_mean) / 2`
         """
         grades = submission.custom.coding_style_grades
         base_grade = submission.grade
         style_mean = grades.get_mean(self.config, round_grade=False)
-        mean_grade = round(base_grade + style_mean) / 2
+
+        # Calculate weighting
+        style_grade_coeff = self.config.experimental.merge_grades.weighting
+        base_grade_coeff = 1 - style_grade_coeff
+
+        new_grade = (base_grade * base_grade_coeff) + (style_mean * style_grade_coeff)
 
         # Update the 'user_tasks' collection (where top submissions are stored)
         self.database.user_tasks.find_one_and_update(
-            {"submissionid": submission._id}, {"$set": {"grade": mean_grade}}
+            {"submissionid": submission._id}, {"$set": {"grade": new_grade}}
         )
 
 

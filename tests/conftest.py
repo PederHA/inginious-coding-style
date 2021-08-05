@@ -101,7 +101,7 @@ def config_raw_full(config_raw_minimal: dict) -> dict:
                 }
             ],
             "experimental": {
-                "merge_grades": False,
+                "merge_grades": {"enabled": False, "weighting": 0.50},
             },
         }
     )
