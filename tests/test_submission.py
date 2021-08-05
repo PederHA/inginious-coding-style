@@ -61,7 +61,7 @@ def test_malformed_submission(submission_grades):
 
 
 def test_group_submission(submission_grades):
-    submission_grades["username"].append("Another user")
+    submission_grades["username"] = ["user_one", "user_two"]
     submission = get_submission(submission_grades)
     assert submission.is_group_submission
     assert len(submission.username) == 2
