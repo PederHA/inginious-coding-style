@@ -44,8 +44,10 @@ plugins:
       - id: comments
         name: Kommentering
         description: Hvor godt kommentert koden er.
-    experimental:
-      merge_grades:
+    submission_query:
+        header: CSG
+        priority: 3000
+    merge_grades:
         enabled: False
         weighting: 0.50
 ```
@@ -83,22 +85,31 @@ Description of category. This should describe the criteria used for grading.
 
 ---
 
-### `experimental`
+### `submission_query`
 
-Experimental options that are not yet production-ready, but are implemented to a degree that makes them usable.
+Settings for the submissions query results table (`/admin/<courseid>/submissions`).
 
-#### `merge_grades`
+#### `header`
+
+The plugin's header text in the query results table.
+
+#### `priority`
+
+The priority of the plugin hook. The priority must be a number that is unique to the plugin in order to avoid column ordering issues. In cases where the plugin's header does not match its corresponding column in the table body, try to change `priority` to a different number.
+
+### `merge_grades`
 
 Modifies a submission's displayed grade by finding the mean of automated grading done by INGInious and Coding Style grades:
 
 `new_grade = (automated_grade * (1 - weighting)) + (coding_style_grade_mean * weighting)`
 
 This feature is not comprehensively tested, and does not have all its features fully implemented on the frontend. As such, it is currently not advised to enable this feature.
-##### `enabled`
+
+#### `enabled`
 
 Enable grade merging
 
-##### `weighting`
+#### `weighting`
 
 Weighting of coding style grades in new grade calculation. Default: 0.50
 

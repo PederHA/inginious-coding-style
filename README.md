@@ -55,8 +55,7 @@ plugins:
       - id: comments
         name: Kommentering
         description: Hvor godt kommentert koden er.
-    experimental:
-      merge_grades:
+    merge_grades:
         enabled: False
         weighting: 0.50
 ```

@@ -330,7 +330,7 @@ class CodingStyleGrading(SubmissionPage):
 
         Returns updated submission, or None if submission was not found.
         """
-        if self.config.experimental.merge_grades:
+        if self.config.merge_grades.enabled:
             self.merge_submission_grades(submission)
 
         self.database.submissions.find_one_and_update(
@@ -363,7 +363,7 @@ class CodingStyleGrading(SubmissionPage):
         style_mean = grades.get_mean(self.config, round_grade=False)
 
         # Calculate weighting
-        style_grade_coeff = self.config.experimental.merge_grades.weighting
+        style_grade_coeff = self.config.merge_grades.weighting
         base_grade_coeff = 1 - style_grade_coeff
 
         new_grade = (base_grade * base_grade_coeff) + (style_mean * style_grade_coeff)
@@ -432,48 +432,7 @@ def init(
     Allows teachers to grade several aspect of a student submission's code style.
 
     Available configuration:
-    ::
-
-        plugins:
-        -   plugin_module: inginious_coding_style
-            name: "INGInious Coding Style"
-            enabled:
-                - comments
-                - modularity
-                - structure
-                - idiomaticity
-            categories:
-                - id: <Category id>
-                name: <Name of category>
-                description: <Category description>
-            experimental:
-                merge_grades: false
-
-    *name*
-    Display name of the plugin
-
-    *enabled*
-    List of grading category IDs to enable. Omitting this parameter enables all default categories.
-
-    *categories*
-    Custom category definitions. Each category must contain the following:
-
-        *id*
-        Unique ID of category
-
-        *name*
-        Name of category
-
-        *description*
-        Category description
-
-    *experimental*
-    Experimental features to enable. These are not guaranteed to be robust,
-    and are subject to change in future versions.
-
-        *merge_grades*
-        Recalculates a submission's grade based on the mean of automated grade
-        and coding style grades. The weighting is 50% automated grade + 50% style grade average.
+    https://pederha.github.io/inginious-coding-style/configuration/
     """
     # Get config and make it global
     config = get_config(conf)

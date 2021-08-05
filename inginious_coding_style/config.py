@@ -1,18 +1,57 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, validator, Field
 from pydantic.fields import ModelField
 from .logger import get_logger
 from .grades import GradingCategory, DEFAULT_CATEGORIES
 
 
-class MergeGradesSetting(BaseModel):
+def none_returns_defaults(value: Any, field: ModelField) -> Any:
+    """Custom validator that attempts to call the field's default factory
+    or returns the field's default value if `None` is passed in.
+
+    Handles cases where the contents of a config section is deleted, but
+    its header remains.
+
+    If the field does not have defaults, we let Pydantic handle the
+    resulting validation error.
+
+    Example:
+    ------
+
+    We go from this:
+    ```yml
+    enabled:
+        - comments
+        - modularity
+        - structure
+        - idiomaticity
+    ```
+
+    To this:
+    ```yml
+    enabled:
+    ```
+
+    In this case, the value of `enabled` is interpreted as `None` by
+    the INGInious YAML parser. When that happens, this function serves
+    as a failsafe, so that the field's defaults kick in.
+    """
+    if value is None:
+        if field.default is not None:
+            return field.default
+        elif field.default_factory is not None:
+            return field.default_factory()
+    return value
+
+
+class SubmissionQuerySettings(BaseModel):
+    header: str = "csg"
+    priority: int = 3000  # can you do negative numbers?
+
+
+class MergeGradesSettings(BaseModel):
     enabled: bool = False
     weighting: float = Field(ge=0.01, le=1.00, default=0.50)
-
-
-class ExperimentalSettings(BaseModel):
-    merge_grades: MergeGradesSetting = Field(default_factory=MergeGradesSetting)
-    # other experimental settings here...
 
 
 class PluginConfigIn(BaseModel):
@@ -22,33 +61,26 @@ class PluginConfigIn(BaseModel):
     name: str = "INGInious Coding Style"
 
     # Enabled grading categories
-    enabled: List[str] = []
+    enabled: List[str] = Field([])
 
     # Custom grading categories
-    categories: List[GradingCategory] = []
+    categories: List[GradingCategory] = Field([])
 
-    # Experimental settings
-    experimental: ExperimentalSettings = Field(default_factory=ExperimentalSettings)
+    # Submission query page settings
+    submission_query: SubmissionQuerySettings = Field(
+        default_factory=SubmissionQuerySettings
+    )
 
-    @validator("enabled", pre=True)
-    def accept_enabled_none(cls, enabled: Optional[List[str]]) -> List[str]:
-        if enabled is None:
-            return []
-        return enabled
+    # Merge grades settings
+    merge_grades: MergeGradesSettings = Field(default_factory=MergeGradesSettings)
 
-    @validator("categories", pre=True)
-    def accept_categories_none(cls, categories: Optional[List[str]]) -> List[str]:
-        if categories is None:
-            return []
-        return categories
+    # validators
+    # Reusing validators: https://pydantic-docs.helpmanual.io/usage/validators/#reuse-validators
+    # "*" validator: https://pydantic-docs.helpmanual.io/usage/validators/#pre-and-per-item-validators
+    handle_none = validator("*", allow_reuse=True, pre=True)(none_returns_defaults)
 
-    @validator("experimental", pre=True)
-    def accept_experimental_none(
-        cls, experimental: Optional[Dict[str, bool]], field: ModelField
-    ) -> Union[ExperimentalSettings, Optional[Dict[str, bool]]]:
-        if experimental is None and field.default_factory is not None:
-            return field.default_factory()
-        return experimental
+
+# TODO: Merge PluginConfigIn and PluginConfig
 
 
 class PluginConfig(BaseModel):
@@ -61,7 +93,8 @@ class PluginConfig(BaseModel):
 
     name: str
     enabled: Dict[str, GradingCategory] = {}
-    experimental: ExperimentalSettings
+    submission_query: SubmissionQuerySettings
+    merge_grades: MergeGradesSettings
 
     def __init__(self, config_in: PluginConfigIn) -> None:
         enabled = self._make_dict_from_enabled(
@@ -71,7 +104,8 @@ class PluginConfig(BaseModel):
         super().__init__(
             name=config_in.name,
             enabled=enabled,
-            experimental=config_in.experimental,
+            merge_grades=config_in.merge_grades,
+            submission_query=config_in.submission_query,
         )
 
     # TODO: rename method
