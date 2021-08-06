@@ -44,7 +44,7 @@ def coding_style_grades_dict(grades):
     return {"coding_style_grades": grades}
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def submission_nogrades() -> dict:
     return {
         "_id": ObjectId("123456789abc123456789abc"),
@@ -100,9 +100,8 @@ def config_raw_full(config_raw_minimal: dict) -> dict:
                     "description": "This is a custom category.",
                 }
             ],
-            "experimental": {
-                "merge_grades": {"enabled": False, "weighting": 0.50},
-            },
+            "merge_grades": {"enabled": False, "weighting": 0.50},
+            "submission_query": {"header": "CSG", "priority": 3000},
         }
     )
     config_raw_minimal["enabled"].append("custom_category")

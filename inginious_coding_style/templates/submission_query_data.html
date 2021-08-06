@@ -1,0 +1,7 @@
+<td>
+    {% if has_grades %}
+        <a href="/admin/codingstyle/submission/{{ submission._id }}"><i class="fa fa-check" aria-hidden="true"></i></a>
+    {% else %}
+        <i class="fa fa-times" aria-hidden="true"></i>
+    {% endif %}
+</td>

@@ -2,7 +2,12 @@ from datetime import datetime
 
 import pytest
 from inginious_coding_style.submission import get_submission
-from inginious_coding_style.utils import get_submission_timestamp
+from inginious_coding_style.utils import (
+    get_submission_timestamp,
+    has_coding_style_grades,
+)
+
+from hypothesis import given, strategies as st
 
 
 @pytest.mark.parametrize(
@@ -24,3 +29,14 @@ def test_get_submission_timestamp_unknown(submission_grades):
     s = get_submission(submission_grades)
     s.submitted_on = None
     assert get_submission_timestamp(s) == "Unknown"
+
+
+@pytest.mark.skip("Needs a proper strategy for custom dict")
+@given(
+    custom=st.dictionaries(
+        st.text(), st.one_of(st.text(), st.lists(st.text()), st.none())
+    )
+)
+def test_has_coding_style_grades_fuzz(submission_nogrades, custom):
+    submission_nogrades["custom"] = custom
+    assert not has_coding_style_grades(submission_nogrades)

@@ -55,6 +55,9 @@ plugins:
       - id: comments
         name: Kommentering
         description: Hvor godt kommentert koden er.
+    submission_query:
+        header: CSG
+        priority: 3000
     merge_grades:
         enabled: False
         weighting: 0.50

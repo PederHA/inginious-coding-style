@@ -27,6 +27,7 @@ from .utils import (
     get_best_submission,
     get_submission_authors_realname,
     get_submission_timestamp,
+    has_coding_style_grades,
 )
 
 __version__ = "1.1.1"
@@ -387,6 +388,33 @@ def submission_admin_menu(
     )
 
 
+# TODO: add *args, **kwargs to all plugin hooks and explain why
+
+
+def submission_query_header(
+    course: Course,
+    template_helper: TemplateHelper,
+) -> str:
+    return template_helper.render(
+        "submission_query_header.html",
+        config=PLUGIN_CONFIG,
+        template_folder=TEMPLATES_PATH,
+    )
+
+
+def submission_query_data(
+    course: Course,
+    submission: OrderedDict[str, Any],
+    template_helper: TemplateHelper,
+) -> str:
+    return template_helper.render(
+        "submission_query_data.html",
+        has_grades=has_coding_style_grades(submission),
+        submission=submission,
+        template_folder=TEMPLATES_PATH,
+    )
+
+
 def task_list_item(
     course: Course,
     task: Task,
@@ -447,6 +475,20 @@ def init(
 
     # Show button to navigate to coding style grading page for admins
     plugin_manager.add_hook("submission_admin_menu", submission_admin_menu)
+
+    # Add header to submission query table
+    plugin_manager.add_hook(
+        "submission_query_header",
+        submission_query_header,
+        prio=config.submission_query.priority,
+    )
+
+    # Add column to submission query table
+    plugin_manager.add_hook(
+        "submission_query_data",
+        submission_query_data,
+        prio=config.submission_query.priority,
+    )
 
     # Grading interface for admins
     plugin_manager.add_page(

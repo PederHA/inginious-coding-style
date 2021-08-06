@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Any, List, Optional, OrderedDict
 
 from inginious.frontend.tasks import Task
 from inginious.frontend.pages.utils import INGIniousPage
@@ -45,3 +45,16 @@ def get_best_submission(task: Task) -> Optional[Submission]:
         if best is None or submission["grade"] > best["grade"]:
             best = submission
     return get_submission(best) if best else best
+
+
+def has_coding_style_grades(submission: OrderedDict[str, Any]) -> bool:
+    """Checks if a submission LOOKS like it has coding style grades.
+
+    We don't check the contents of the custom grades, we just verify that
+    the submission has the correct "shape" by identifying whether or
+    `submission["custom"]["coding_style_grades"]` exists.
+    """
+    try:
+        return bool(submission["custom"]["coding_style_grades"])
+    except:
+        return False
