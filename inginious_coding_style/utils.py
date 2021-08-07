@@ -48,11 +48,12 @@ def get_best_submission(task: Task) -> Optional[Submission]:
 
 
 def has_coding_style_grades(submission: OrderedDict[str, Any]) -> bool:
-    """Checks if a submission LOOKS like it has coding style grades.
+    """Checks if a submission retrieved from the INGInious submission manager
+    _looks_ like it has coding style grades.
 
     We don't check the contents of the custom grades, we just verify that
-    the submission has the correct "shape" by identifying whether or
-    `submission["custom"]["coding_style_grades"]` exists.
+    the submission has the correct "shape" by identifying whether or not
+    `submission["custom"]["coding_style_grades"]` exists and is not empty.
     """
     try:
         return bool(submission["custom"]["coding_style_grades"])

@@ -57,6 +57,7 @@ plugins:
         description: Hvor godt kommentert koden er.
     submission_query:
         header: CSG
+        button: true
         priority: 3000
     merge_grades:
         enabled: False

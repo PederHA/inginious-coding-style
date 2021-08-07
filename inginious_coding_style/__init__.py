@@ -415,6 +415,21 @@ def submission_query_data(
     )
 
 
+def submission_query_button(
+    course: Course,
+    submission: OrderedDict[str, Any],
+    template_helper: TemplateHelper,
+) -> str:
+    # TODO: in the future, we should attempt to cache submission info
+    # so that we don't have to do twice the amount of work for two hooks.
+    return template_helper.render(
+        "submission_query_button.html",
+        has_grades=has_coding_style_grades(submission),
+        submission=submission,
+        template_folder=TEMPLATES_PATH,
+    )
+
+
 def task_list_item(
     course: Course,
     task: Task,
@@ -489,6 +504,14 @@ def init(
         submission_query_data,
         prio=config.submission_query.priority,
     )
+
+    if config.submission_query.button:
+        # Add button to submission query table row
+        plugin_manager.add_hook(
+            "submission_query_button",
+            submission_query_button,
+            prio=config.submission_query.priority,
+        )
 
     # Grading interface for admins
     plugin_manager.add_page(

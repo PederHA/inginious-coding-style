@@ -47,6 +47,7 @@ def none_returns_defaults(value: Any, field: ModelField) -> Any:
 class SubmissionQuerySettings(BaseModel):
     header: str = "csg"
     priority: int = 3000  # can you do negative numbers?
+    button: bool = True
 
 
 class MergeGradesSettings(BaseModel):
