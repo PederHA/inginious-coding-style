@@ -59,9 +59,9 @@ plugins:
         header: CSG
         button: true
         priority: 3000
-    merge_grades:
-        enabled: False
-        weighting: 0.50
+    weighted_mean:
+        enabled: false
+        weighting: 0.25
 ```
 
 <!-- ## Known Issues -->

@@ -137,6 +137,8 @@ class CodingStyleGrading(SubmissionPage):
         """Displays coding style grading page for a specific submission."""
         course, task, sub = self.fetch_submission(submissionid)
 
+        # TODO: should sub["status"] == "error" show an error message?
+
         # Validate submission and check if it has coding style grades
         submission = get_submission(sub)
         grades = submission.custom.coding_style_grades
@@ -331,7 +333,7 @@ class CodingStyleGrading(SubmissionPage):
 
         Returns updated submission, or None if submission was not found.
         """
-        if self.config.merge_grades.enabled:
+        if self.config.weighted_mean.enabled:
             self.merge_submission_grades(submission)
 
         self.database.submissions.find_one_and_update(
@@ -341,9 +343,7 @@ class CodingStyleGrading(SubmissionPage):
 
     def merge_submission_grades(self, submission: Submission) -> None:
         """
-        ## WARNING: EXPERIMENTAL
-
-        Finds the mean of submission base grade and coding style grade
+        Finds the weighted mean of a submission's base grade and coding style grades
         and updates its entry in the DB collection 'user_tasks', which is a collection
         that records top submissions for every user for every task.
 
@@ -359,19 +359,10 @@ class CodingStyleGrading(SubmissionPage):
         Furthermore, it makes no sense to grade a submission that ISN'T the user's
         best submission, so that is also relevant!
         """
-        grades = submission.custom.coding_style_grades
-        base_grade = submission.grade
-        style_mean = grades.get_mean(self.config, round_grade=False)
-
-        # Calculate weighting
-        style_grade_coeff = self.config.merge_grades.weighting
-        base_grade_coeff = 1 - style_grade_coeff
-
-        new_grade = (base_grade * base_grade_coeff) + (style_mean * style_grade_coeff)
-
+        weighted_mean = submission.get_weighted_mean(self.config)
         # Update the 'user_tasks' collection (where top submissions are stored)
         self.database.user_tasks.find_one_and_update(
-            {"submissionid": submission._id}, {"$set": {"grade": new_grade}}
+            {"submissionid": submission._id}, {"$set": {"grade": weighted_mean}}
         )
 
 

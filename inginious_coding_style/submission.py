@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field, validator, ValidationError
 from ._types import GradesIn
 from .grades import CodingStyleGrades, get_grades
 from .logger import get_logger
+from .config import PluginConfig
 
 
 class Custom(BaseModel):
@@ -55,7 +56,7 @@ class Submission(BaseModel):
     response_type: Any
     input: Any
     archive: Any
-    custom: Custom
+    custom: Custom = Field(default_factory=Custom)
     grade: float
     problems: Any
     result: Any
@@ -85,6 +86,17 @@ class Submission(BaseModel):
     @property
     def is_group_submission(self) -> bool:
         return len(self.username) > 1
+
+    def get_weighted_mean(self, config: PluginConfig) -> float:
+        grades = self.custom.coding_style_grades
+        base_grade = self.grade
+        style_mean = grades.get_mean(config, round_grade=False)
+
+        # Calculate weighting
+        style_grade_coeff = config.weighted_mean.weighting
+        base_grade_coeff = 1 - style_grade_coeff
+
+        return (base_grade * base_grade_coeff) + (style_mean * style_grade_coeff)
 
 
 def get_submission(submission: OrderedDict[str, Any]) -> Submission:

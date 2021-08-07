@@ -50,9 +50,9 @@ class SubmissionQuerySettings(BaseModel):
     button: bool = True
 
 
-class MergeGradesSettings(BaseModel):
+class WeightedMeanSettings(BaseModel):
     enabled: bool = False
-    weighting: float = Field(ge=0.01, le=1.00, default=0.50)
+    weighting: float = Field(ge=0.00, le=1.00, default=0.25)
 
 
 class PluginConfigIn(BaseModel):
@@ -62,7 +62,7 @@ class PluginConfigIn(BaseModel):
     name: str = "INGInious Coding Style"
 
     # Enabled grading categories
-    enabled: List[str] = Field([])
+    enabled: List[str] = Field(list(DEFAULT_CATEGORIES.keys()))
 
     # Custom grading categories
     categories: List[GradingCategory] = Field([])
@@ -72,8 +72,8 @@ class PluginConfigIn(BaseModel):
         default_factory=SubmissionQuerySettings
     )
 
-    # Merge grades settings
-    merge_grades: MergeGradesSettings = Field(default_factory=MergeGradesSettings)
+    # Weighted mean grades settings
+    weighted_mean: WeightedMeanSettings = Field(default_factory=WeightedMeanSettings)
 
     # validators
     # Reusing validators: https://pydantic-docs.helpmanual.io/usage/validators/#reuse-validators
@@ -95,7 +95,7 @@ class PluginConfig(BaseModel):
     name: str
     enabled: Dict[str, GradingCategory] = {}
     submission_query: SubmissionQuerySettings
-    merge_grades: MergeGradesSettings
+    weighted_mean: WeightedMeanSettings
 
     def __init__(self, config_in: PluginConfigIn) -> None:
         enabled = self._make_dict_from_enabled(
@@ -105,7 +105,7 @@ class PluginConfig(BaseModel):
         super().__init__(
             name=config_in.name,
             enabled=enabled,
-            merge_grades=config_in.merge_grades,
+            weighted_mean=config_in.weighted_mean,
             submission_query=config_in.submission_query,
         )
 
