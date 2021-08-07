@@ -67,7 +67,7 @@ plugins:
     {%- endif -%}
   {%- endif %}
 {% endfor -%}
-required: {% if required is not none -%} {{ id in required }} {% else %} {{ False }} {%- endif %}
+required: {% if required is not none -%} {{ id in required }} {% else -%} {{ False }} {%- endif %}
 
 ```
 {% endmacro %}
