@@ -1,4 +1,4 @@
-name: ci
+name: mkdocs
 on:
   push:
     branches:
@@ -10,7 +10,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.x
+          python-version: 3.8
       - run: pip install mkdocs-material markdown-include mkdocs-markdownextradata-plugin inginious pydantic
-      - run: cd docs && python scripts/generate_categories.py
+      - run: cd docs/scripts && python generate_categories.py && python generate_config_schema.py
       - run: cd docs && mkdocs gh-deploy --force

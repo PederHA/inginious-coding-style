@@ -1,40 +1,11 @@
-from pathlib import Path
-import sys
-from yaml import load, dump
-from yaml import Dumper
-
-# Set up directories
-SCRIPT_PATH = Path(__file__).parent.absolute()
-
-# Directory to store category data
-DATA_DIR = SCRIPT_PATH.parent / "data"
-DATA_DIR.mkdir(parents=True, exist_ok=True)
-
-# Lets us import modules from the plugin
-PLUGIN_DIR = SCRIPT_PATH.parent.parent
-sys.path.append(str(PLUGIN_DIR))
+from common import dump_yaml
 
 from inginious_coding_style.grades import DEFAULT_CATEGORIES
 
 
-# Custom dumper that matches style used by INGInious config.
-class FixedIndentDumper(Dumper):
-    def increase_indent(self, flow=False, *args, **kwargs):
-        return super().increase_indent(flow=flow, indentless=False)
-
-
-with open(DATA_DIR / "categories.yml", "w", encoding="utf-8") as f:
-    dicts = [c.dict() for c in DEFAULT_CATEGORIES.values()]
+if __name__ == "__main__":
     categories = [
-        {"id": d["id"], "name": d["name"], "description": d["description"]}
-        for d in dicts
+        {"id": d.id, "name": d.name, "description": d.description}
+        for d in DEFAULT_CATEGORIES.values()
     ]
-    f.write(
-        dump(
-            {"categories": categories},
-            indent=2,
-            default_flow_style=False,
-            sort_keys=False,
-            Dumper=FixedIndentDumper,
-        )
-    )
+    dump_yaml("categories.yml", categories)
