@@ -1,13 +1,16 @@
+from inginious_coding_style.submission import get_submission
 import pytest
 
 from bson import ObjectId
 from datetime import datetime
 
+from inginious_coding_style.config import get_config
+
 
 # TODO: fix scope / use generator fixture / create context manager
 @pytest.fixture(scope="class")
-def grades() -> dict:
-    return {
+def grades():
+    yield {
         "comments": {
             "id": "comments",
             "name": "Comments",
@@ -41,12 +44,12 @@ def grades() -> dict:
 
 @pytest.fixture
 def coding_style_grades_dict(grades):
-    return {"coding_style_grades": grades}
+    yield {"coding_style_grades": grades}
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def submission_nogrades() -> dict:
-    return {
+    yield {
         "_id": ObjectId("123456789abc123456789abc"),
         "courseid": "mycourse",
         "taskid": "mytask",
@@ -73,23 +76,32 @@ def submission_nogrades() -> dict:
 
 
 @pytest.fixture
-def submission_grades(submission_nogrades, coding_style_grades_dict) -> dict:
+def submission_grades(submission_nogrades, coding_style_grades_dict):
     submission_nogrades["custom"] = coding_style_grades_dict
-    return submission_nogrades
+    yield submission_nogrades
 
 
 @pytest.fixture
-def config_raw_minimal() -> dict:
-    """A minimal plugin config as parsed by INGInious."""
-    return {
+def submission_pydantic_grades(submission_grades):
+    yield get_submission(submission_grades)
+
+
+@pytest.fixture
+def config_raw_minimal():
+    """A minimal plugin config.
+    Represented as a dict parsed by the INGInious YAML parser.
+    """
+    yield {
         "plugin_module": "inginious_coding_style",
         "name": "INGInious Coding Style",
     }
 
 
 @pytest.fixture
-def config_raw_full(config_raw_minimal: dict) -> dict:
-    """A plugin config with all options used as parsed by INGInious."""
+def config_raw_full(config_raw_minimal: dict):
+    """A plugin config with all options used.
+    Represented as a dict parsed by the INGInious YAML parser.
+    """
     config_raw_minimal.update(
         {
             "enabled": ["comments", "modularity", "structure", "idiomaticity"],
@@ -100,9 +112,14 @@ def config_raw_full(config_raw_minimal: dict) -> dict:
                     "description": "This is a custom category.",
                 }
             ],
-            "merge_grades": {"enabled": False, "weighting": 0.50},
-            "submission_query": {"header": "CSG", "priority": 3000},
+            "weighted_mean": {"enabled": False, "weighting": 0.25},
+            "submission_query": {"header": "CSG", "priority": 3000, "button": True},
         }
     )
     config_raw_minimal["enabled"].append("custom_category")
-    return config_raw_minimal
+    yield config_raw_minimal
+
+
+@pytest.fixture
+def config_pydantic_full(config_raw_full):
+    yield get_config(config_raw_full)

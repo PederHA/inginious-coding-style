@@ -1,8 +1,10 @@
+from inginious_coding_style.config import PluginConfig
+
 import pytest
 from inginious_coding_style.grades import get_grades
 from inginious_coding_style.submission import Submission, get_submission
 
-from hypothesis import given, strategies as st
+from hypothesis import given, strategies as st, settings, HealthCheck
 
 
 @pytest.mark.parametrize(
@@ -53,15 +55,102 @@ def test_get_submission_same_as_constructor(
     assert Submission(**submission) == get_submission(submission)
 
 
-def test_malformed_submission(submission_grades):
-    submission_grades["_id"] = None
-    submission_grades["problems"] = None
-    submission_grades["result"] = None
-    assert get_submission(submission_grades)
-
-
 def test_group_submission(submission_grades):
     submission_grades["username"] = ["user_one", "user_two"]
     submission = get_submission(submission_grades)
     assert submission.is_group_submission
     assert len(submission.username) == 2
+
+
+def test_mangled_submission(submission_nogrades):
+    # TODO: make submission fixtures function scoped
+    # while not breaking hypothesis tests. Context manager?
+    for k in [
+        "_id",
+        "response_type",
+        "input",
+        "archive",
+        "custom",
+        "problems",
+        "result",
+        "state",
+        "stderr",
+        "stdout",
+        "text",
+        "user_ip",
+    ]:
+        # The absense of these keys should not make the submission fail to validate
+        submission_nogrades.pop(k)
+        assert get_submission(
+            submission_nogrades
+        ), f"Absence of {k} causes validation error"
+
+
+def test_get_weighted_mean(
+    submission_pydantic_grades: Submission, config_pydantic_full: PluginConfig
+):
+    sub = submission_pydantic_grades
+    conf = config_pydantic_full
+
+    sub.grade = 100.0
+    conf.weighted_mean.weighting = 0.25
+
+    # Set all grades to 100
+    sub.custom.coding_style_grades["comments"].grade = 100
+    sub.custom.coding_style_grades["modularity"].grade = 100
+    sub.custom.coding_style_grades["structure"].grade = 100
+    sub.custom.coding_style_grades["idiomaticity"].grade = 100
+
+    assert sub.get_weighted_mean(conf) == 100.0
+
+    sub.custom.coding_style_grades["comments"].grade = 0
+    assert sub.get_weighted_mean(conf) == 93.75
+
+    # Set weighting to 0
+    conf.weighted_mean.weighting = 0.0
+    assert sub.get_weighted_mean(conf) == 100.0
+
+    # 0 * 1 + 100 * 0 = 0
+    sub.custom.coding_style_grades["comments"].grade = 100
+    sub.grade = 0.0
+    assert sub.get_weighted_mean(conf) == 0.0
+
+
+# FIXME: I am terrible at hypothesis.
+# How to do this without disabling health check?
+@given(
+    submission_grade=st.floats(0.0, 100.0),
+    weighting=st.floats(0.0, 1.0),
+    comments_grade=st.floats(0.0, 100.0),
+    modularity_grade=st.floats(0.0, 100.0),
+    structure_grade=st.floats(0.0, 100.0),
+    idiomaticity_grade=st.floats(0.0, 100.0),
+)
+@settings(suppress_health_check=HealthCheck.all())  # sorry
+def test_get_weighted_mean_fuzz(
+    submission_pydantic_grades: Submission,
+    config_pydantic_full: PluginConfig,
+    submission_grade,
+    weighting,
+    comments_grade,
+    modularity_grade,
+    structure_grade,
+    idiomaticity_grade,
+):
+    sub = submission_pydantic_grades
+    conf = config_pydantic_full
+
+    sub.grade = submission_grade
+    conf.weighted_mean.weighting = weighting
+
+    sub.custom.coding_style_grades["comments"].grade = comments_grade
+    sub.custom.coding_style_grades["modularity"].grade = modularity_grade
+    sub.custom.coding_style_grades["structure"].grade = structure_grade
+    sub.custom.coding_style_grades["idiomaticity"].grade = idiomaticity_grade
+
+    mean_style = sub.custom.coding_style_grades.get_mean(conf)
+    style_grade_coeff = conf.weighted_mean.weighting
+    base_grade_coeff = 1 - style_grade_coeff
+    weighted_mean = (sub.grade * base_grade_coeff) + (mean_style * style_grade_coeff)
+
+    assert pytest.approx(sub.get_weighted_mean(conf), weighted_mean)

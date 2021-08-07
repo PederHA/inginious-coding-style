@@ -45,6 +45,9 @@ class CodingStyleGrades(BaseModel):
                     return True
         return False
 
+    def __getitem__(self, key: str) -> GradingCategory:
+        return self.__root__[key]
+
     @property
     def grades(self) -> Dict[str, GradingCategory]:
         return self.__root__

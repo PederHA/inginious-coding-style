@@ -38,3 +38,9 @@ def test_get_config_disabled_custom_category(config_raw_full):
     config_raw_full["enabled"].remove("custom_category")
     config = get_config(config_raw_full)
     assert "custom_category" not in config.enabled
+
+
+# TODO: add test of INGInious configuration file with the INGInious YAML parser
+# to ensure that it parses the config file as expected.
+#
+# This is useful to ensure continued compatibility with future INGInious versions.
