@@ -15,7 +15,7 @@ plugins:
 ```
 
 The minimal configuration enables all default categories:
-{% for category in categories.categories %}
+{% for category in categories %}
 [`{{ category.id }}`](#{{ category.id }}){% endfor %}.
 
 See [Default Categories](#default-categories) for more information about the default categories.
@@ -85,7 +85,7 @@ Display name of the plugin
 ### `enabled`
 
 Which coding style categories to enable. Omitting this parameter enables all default categories (
-  {%- for category in categories.categories -%}
+  {%- for category in categories -%}
     `{{ category.id }}`
   {% endfor -%}).
 
