@@ -182,7 +182,7 @@ Weighting of coding style grades.
 
 ## Default Categories
 
-INGInious Coding Style comes with {{ categories.categories | length }} default grading categories. If you want to change the names or descriptions of these categories, you can override them in your INGInious configuration file.
+INGInious Coding Style comes with {{ categories | length }} default grading categories. If you want to change the names or descriptions of these categories, you can override them in your INGInious configuration file.
 
 !!! attention
     The `id` parameter of a category must match the default category's ID if you wish to overwrite a default category. If you simply wish to disable a default category, omit its ID from the top-level `enabled` parameter.
