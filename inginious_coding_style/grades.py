@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import Dict, Optional, Union, TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from .config import PluginConfig
-
-from typing import Dict, Optional, Union
 from pydantic import BaseModel, Field, validator
 
 from ._types import GradesIn
+
+if TYPE_CHECKING:
+    from .config import PluginConfig
 
 
 class GradingCategory(BaseModel):
@@ -108,7 +107,7 @@ class CodingStyleGrades(BaseModel):
             grades = [v for (k, v) in self.__root__.items() if k in config.enabled]
         else:
             grades = [v for (k, v) in self.__root__.items()]
-        n = len(grades) or 1  # avoid divison by 0
+        n = len(grades) or 1  # avoid division by 0
         avg = sum(g.grade for g in grades) / n
         if round_grade:
             return round(avg, ndigits)
