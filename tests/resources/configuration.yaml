@@ -1,0 +1,47 @@
+backend: local
+backup_directory: /directory/backup
+local-config:
+    tmp_dir: /directory/tmp
+mongo_opt:
+    database: INGInious
+    host: localhost
+plugins:
+-   plugin_module: inginious_coding_style
+    name: "INGInious Coding Style"
+    enabled:
+        # This enables all default categories + 1 custom category
+        - comments
+        - modularity
+        - structure
+        - idiomaticity
+        - custom_category # Our custom category
+    categories:
+        # This is a definition for a new category
+      - id: custom_category
+        name: Custom Category
+        description: This is a custom category.
+      # This redefines a default category
+      - id: comments
+        name: Kommentering
+        description: Hvor godt kommentert koden er.
+    submission_query:
+        header: CSG
+        priority: 3000
+        button: true
+    weighted_mean:
+        enabled: true
+        weighting: 0.25
+- plugin_module: inginious.frontend.plugins.auth.google_auth
+  id: google_auth
+  client_id: some_id
+  client_secret: some_secret
+  debug: true
+session_parameters:
+    ignore_change_ip: false
+    secret_key: some_session_secret
+    secure: false
+    timeout: 86400
+superadmins:
+- superadmin
+tasks_directory: /directory/tasks
+use_minified_js: false
