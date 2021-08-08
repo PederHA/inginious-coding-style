@@ -2,6 +2,27 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
+## 1.2.0 (Aug xx, 2021)
+
+### Added
+
+- Submission query page hooks.
+  - Coding style grade status column to submission query page.
+  - Coding style grading button to submission query page.
+  - `submission_query` config section.
+- Weighted mean grade calculation.
+  - Based on the previous `merge_grades` functionality, but now lets administrators define a coding style grades weighting for the mean grade calculation.
+
+### Changed
+
+- `merge_grades` config section has been renamed to `weighted_mean`.
+
+### Fixed
+
+### Removed
+
+- `experimental` section in config.
+
 ## 1.1.1 (Aug 3rd, 2021)
 
 ### Fixed

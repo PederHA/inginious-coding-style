@@ -78,9 +78,9 @@ the relevant task.
 - [ ] Add ability to enable/disable grading categories on a per-course basis.
 - [ ] Add ability to enable/disable plugin on a per course-basis.
 
-### Implementation Details
+### Robustness
 
-- [ ] Maybe we actually DON'T need to pass config to `CodingStyleGrades.get_mean()`? After all, we probably want to display the submission's mean grade at the point it was graded, not the mean grade based on the _currently_ enabled categories.
+- [ ] Better exception handling for Pydantic `ValidationError`. If something fails to validate, we should be able to display human-readable messages.
 
 <!-- - [x] Complete -->
 <!-- - [ ] Incomplete -->

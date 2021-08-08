@@ -127,7 +127,7 @@ Settings for the submissions query results table (`/admin/<courseid>/submissions
 
 #### `header`
 
-The plugin's header text in the query results table.
+The header text for the plugin's column in the query results table.
 
 {{ get_schema(schema.definitions.SubmissionQuerySettings.properties.header) }}
 
@@ -139,7 +139,7 @@ Adds an additional button to each search result that links to the submission's c
 
 #### `priority`
 
-The priority of the plugin hook. The priority must be a number that is unique to the plugin in order to avoid column ordering issues. In cases where the plugin's header does not match its corresponding column in the table body, try to change `priority` to a different number.
+The priority of the plugin hook. The priority must be a number that is unique to the plugin in order to avoid column ordering issues. In cases where the plugin's header does not match its corresponding column in the table body, try to change `priority` to a different number. Given the low number of INGInious plugins in existence, this should virtually never happen, though.
 
 {{ get_schema(schema.definitions.SubmissionQuerySettings.properties.priority) }}
 

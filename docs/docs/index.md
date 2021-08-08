@@ -17,6 +17,12 @@ Students can view their coding style grades for each task on a course's task lis
 
 ![Task list grades](img/index/01_tasklist_grade.png)
 
+### Submission Query
+
+New elements are added to the results displayed when querying submissions (`/admin/<courseid>/submissions`) denoting whether or not a submission has coding style grades. The header text for the new column is configurable: [`header`](configuration/#header).
+
+![New button](img/index/06_submission_query.png)
+
 ### Detailed Feedback For a Single Submission
 
 Students can read detailed feedback by clicking on the new "Coding Style Grades" button found on the task page.
