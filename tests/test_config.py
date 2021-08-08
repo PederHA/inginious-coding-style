@@ -1,4 +1,11 @@
+from typing import TYPE_CHECKING
 from inginious_coding_style.config import get_config, DEFAULT_CATEGORIES
+from inginious.common import custom_yaml
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import OrderedDict, Any
 
 
 def test_get_config_minimal(config_raw_minimal):
@@ -40,7 +47,42 @@ def test_get_config_disabled_custom_category(config_raw_full):
     assert "custom_category" not in config.enabled
 
 
-# TODO: add test of INGInious configuration file with the INGInious YAML parser
-# to ensure that it parses the config file as expected.
-#
-# This is useful to ensure continued compatibility with future INGInious versions.
+def test_inginious_config_parser():
+    """This test ensured continued compatibility with future INGInious versions
+    by testing INGInious's YAML parser.
+    """
+    with open("tests/resources/configuration.yaml", "r", encoding="utf-8") as f:
+        conf = custom_yaml.load(f)  # type: OrderedDict[str, Any]
+    # Get the plugin config. Fails if it can't be found
+    plugin_config = next(
+        x for x in conf["plugins"] if x["plugin_module"] == "inginious_coding_style"
+    )  # type: OrderedDict[str, Any]
+
+    assert plugin_config["name"] == "INGInious Coding Style"
+
+    # Enabled
+    assert all(
+        e in ["comments", "modularity", "structure", "idiomaticity", "custom_category"]
+        for e in plugin_config["enabled"]
+    )
+
+    # Categories
+    assert len(plugin_config["categories"]) == 2
+    assert plugin_config["categories"][0]["id"] == "custom_category"
+    assert plugin_config["categories"][0]["name"] == "Custom Category"
+    assert plugin_config["categories"][0]["description"] == "This is a custom category."
+    assert plugin_config["categories"][1]["id"] == "comments"
+    assert plugin_config["categories"][1]["name"] == "Kommentering"
+    assert (
+        plugin_config["categories"][1]["description"]
+        == "Hvor godt kommentert koden er."
+    )
+
+    # Submission Query
+    assert plugin_config["submission_query"]["header"] == "CSG"
+    assert plugin_config["submission_query"]["priority"] == 3000
+    assert plugin_config["submission_query"]["button"] == True
+
+    # Weighted Mean
+    assert plugin_config["weighted_mean"]["enabled"] == True
+    assert plugin_config["weighted_mean"]["weighting"] == 0.25
