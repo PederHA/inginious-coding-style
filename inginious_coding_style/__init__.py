@@ -30,7 +30,7 @@ from .utils import (
     has_coding_style_grades,
 )
 
-__version__ = "1.1.1"
+__version__ = "1.2.0"
 
 PLUGIN_PATH = Path(__file__).parent.absolute()
 TEMPLATES_PATH = PLUGIN_PATH / "templates"
@@ -207,7 +207,7 @@ class CodingStyleGrading(SubmissionPage):
 
         # Check if a category should be removed
         if category := request.args.get("remove"):
-            self.remove_category_from_submission(submission, category=category)
+            self.remove_category_from_submission(submission, category)
             return Response(
                 "ok",
                 # Use custom htmx HTTP header to prompt browser to refresh page
@@ -379,7 +379,7 @@ def submission_admin_menu(
     )
 
 
-# TODO: add *args, **kwargs to all plugin hooks and explain why
+# TODO: add *args, **kwargs to all plugin hook functions to accomodate future additions to hook parameters
 
 
 def submission_query_header(
