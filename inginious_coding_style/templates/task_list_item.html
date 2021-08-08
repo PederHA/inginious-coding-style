@@ -1,7 +1,18 @@
 <br>
-<label for="grade">Coding Style: </label>
-<div class="progress" id="grade">
-    <div class="progress-bar bg-primary" aria-valuenow="{{ grade | int }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ grade | int }}%">
-        {% if grade.is_integer() %}{{ grade | int }}{% else %}{{ grade }}{% endif %} %
+<hr>
+{% if config.weighted_mean.enabled and config.weighted_mean.task_list_bar -%}
+    {%- set grade = submission.grade -%}
+    <label for="correct-grade">Correctness: </label>
+    <div class="progress" id="correct-grade">
+        <div class="progress-bar bg-primary" aria-valuenow="{{ grade | int }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ grade | int }}%">
+            {% if grade.is_integer() %}{{ grade | int }}{% else %}{{ grade }}{% endif %} %
+        </div>
+    </div>
+    <br>
+{%- endif -%}
+<label for="style-grade">Coding Style: </label>
+<div class="progress" id="style-grade">
+    <div class="progress-bar bg-primary" aria-valuenow="{{ style_grade | int }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ style_grade | int }}%">
+        {% if style_grade.is_integer() %}{{ style_grade | int }}{% else %}{{ style_grade }}{% endif %} %
     </div>
 </div>

@@ -175,6 +175,13 @@ Weighting of coding style grades.
 
 {{ get_schema(schema.definitions.WeightedMeanSettings.properties.weighting) }}
 
+#### `task_list_bar`
+
+Show separate progress bars for correctness and coding style grades in addition to the final weighted mean.
+
+![task_list_bar preview](img/configuration/01_task_list_bar.png)
+
+{{ get_schema(schema.definitions.WeightedMeanSettings.properties.task_list_bar) }}
 ---
 
 <!-- Only display this section if we have generated data/categories.-->

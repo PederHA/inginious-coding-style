@@ -53,6 +53,7 @@ class SubmissionQuerySettings(BaseModel):
 class WeightedMeanSettings(BaseModel):
     enabled: bool = False
     weighting: float = Field(ge=0.00, le=1.00, default=0.25)
+    task_list_bar: bool = True
 
 
 class PluginConfigIn(BaseModel):

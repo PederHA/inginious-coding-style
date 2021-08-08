@@ -62,6 +62,7 @@ plugins:
     weighted_mean:
         enabled: false
         weighting: 0.25
+        task_list_bar: true
 ```
 
 <!-- ## Known Issues -->

@@ -2,22 +2,21 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
-## 1.2.0 (Aug xx, 2021)
+## 1.2.0 (Aug 8th, 2021)
 
 ### Added
 
 - Submission query page hooks.
-  - Coding style grade status column to submission query page.
-  - Coding style grading button to submission query page.
-  - `submission_query` config section.
+    - Coding style grade status column to submission query page.
+    - Coding style grading button to submission query page.
+    - `submission_query` config section.
 - Weighted mean grade calculation.
-  - Based on the previous `merge_grades` functionality, but now lets administrators define a coding style grades weighting for the mean grade calculation.
+    - Based on the previous `merge_grades` functionality, but now lets administrators define a custom weight for coding style grades used to find the weighted mean.
+    - Option to show separate bars for automated correctness grade given by INGInious and coding style grade ([`task_list_bar`](https://pederha.github.io/inginious-coding-style/configuration/#task_list_bar)).
 
 ### Changed
 
 - `merge_grades` config section has been renamed to `weighted_mean`.
-
-### Fixed
 
 ### Removed
 

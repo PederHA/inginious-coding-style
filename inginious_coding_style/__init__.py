@@ -429,17 +429,16 @@ def task_list_item(
 ) -> str:
     """Displays a progress bar denoting the current coding style grade for a given task."""
     # TODO: optimize. Cache best submission?
-    best_submission = get_best_submission(task)
-    if not best_submission or not best_submission.custom.coding_style_grades:
+    submission = get_best_submission(task)
+    if not submission or not submission.custom.coding_style_grades:
         return ""
-
-    grades = best_submission.custom.coding_style_grades
 
     return template_helper.render(
         "task_list_item.html",
         template_folder=TEMPLATES_PATH,
-        grade=grades.get_mean(PLUGIN_CONFIG),
-        submission=best_submission,
+        style_grade=submission.custom.coding_style_grades.get_mean(PLUGIN_CONFIG),
+        submission=submission,
+        config=PLUGIN_CONFIG,
     )
 
 
