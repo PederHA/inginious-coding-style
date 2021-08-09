@@ -1,30 +1,8 @@
-from typing import Any, List, Optional, OrderedDict
+from typing import Any, Optional, OrderedDict
 
 from inginious.frontend.tasks import Task
-from inginious.frontend.pages.utils import INGIniousPage
 
 from .submission import Submission, get_submission
-from .logger import get_logger
-
-
-def get_submission_authors_realname(
-    obj: INGIniousPage, submission: Submission
-) -> List[str]:
-    """Retrieves a list of the real names of a submission's authors."""
-    names = []
-    for username in submission.username:
-        realname = obj.user_manager.get_user_realname(username)
-        if realname is None:
-            get_logger().debug(f"Unknown user: {username}")
-            continue  # ignore unknown username
-        names.append(realname)
-    return names or ["Unknown"]  # fall back name
-
-
-def get_submission_timestamp(submission: Submission) -> str:
-    """Returns formatted timestamp of a submission's submission time."""
-    s = submission.submitted_on
-    return s.strftime("%Y-%m-%d %H:%M:%S") if s else "Unknown"
 
 
 def get_best_submission(task: Task) -> Optional[Submission]:

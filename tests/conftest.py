@@ -1,3 +1,5 @@
+import copy
+
 from inginious_coding_style.submission import get_submission
 import pytest
 
@@ -77,8 +79,9 @@ def submission_nogrades() -> dict:
 
 @pytest.fixture
 def submission_grades(submission_nogrades, coding_style_grades_dict):
-    submission_nogrades["custom"] = coding_style_grades_dict
-    yield submission_nogrades
+    sub = copy.deepcopy(submission_nogrades)
+    sub["custom"] = coding_style_grades_dict
+    yield sub
 
 
 @pytest.fixture

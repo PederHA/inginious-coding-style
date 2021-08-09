@@ -1,8 +1,6 @@
-import time
 from pathlib import Path
 from typing import Any, Dict, List, OrderedDict, Union
 
-from bson.errors import InvalidId
 from flask import redirect, request
 from inginious.client.client import Client
 from inginious.frontend.course_factory import CourseFactory
@@ -12,25 +10,23 @@ from inginious.frontend.pages.utils import INGIniousAuthPage
 from inginious.frontend.plugin_manager import PluginManager
 from inginious.frontend.tasks import Task
 from inginious.frontend.template_helper import TemplateHelper
-from pydantic import ValidationError
 from werkzeug.datastructures import ImmutableMultiDict
-from werkzeug.exceptions import BadRequest, Forbidden, InternalServerError, NotFound
+from werkzeug.exceptions import BadRequest, Forbidden, NotFound
 from werkzeug.wrappers.response import Response
 
 from ._types import GradesIn
 from .config import PluginConfig, get_config
 from .exceptions import init_exception_handlers
-from .grades import add_config_categories, get_grades
+from .grades import add_config_categories, get_grades, CodingStyleGrades
 from .logger import get_logger
+from .mixins import AdminPageMixin, SubmissionMixin
 from .submission import Submission, get_submission
 from .utils import (
     get_best_submission,
-    get_submission_authors_realname,
-    get_submission_timestamp,
     has_coding_style_grades,
 )
 
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 
 PLUGIN_PATH = Path(__file__).parent.absolute()
 TEMPLATES_PATH = PLUGIN_PATH / "templates"
@@ -39,7 +35,7 @@ TEMPLATES_PATH = PLUGIN_PATH / "templates"
 PLUGIN_CONFIG: PluginConfig = None  # type: ignore
 
 
-class StudentSubmissionCodingStyle(INGIniousAuthPage):
+class StudentSubmissionCodingStyle(INGIniousAuthPage, SubmissionMixin):
     """Displays a detailed view of coding style grades for a single submission
     made by a student."""
 
@@ -52,15 +48,13 @@ class StudentSubmissionCodingStyle(INGIniousAuthPage):
 
     def GET_AUTH(self, submissionid: str) -> str:
         """Displays all coding style grades for a given course for a user."""
-        submission = self.get_submission(submissionid)
-        course = self.get_course(submission)
-        task = self.get_task(submission, course)
+        course, task, submission = self.get_submission(submissionid, user_check=True)
 
         if not submission.custom.coding_style_grades:
             raise NotFound("Submission has no coding style grades.")
 
-        names = get_submission_authors_realname(self, submission)
-        submitted_on = get_submission_timestamp(submission)
+        names = self.get_submission_authors_realname(submission)
+        submitted_on = submission.get_timestamp()
 
         return self.template_helper.render(
             "stylegrade.html",
@@ -75,55 +69,8 @@ class StudentSubmissionCodingStyle(INGIniousAuthPage):
             config=self.config,
         )
 
-    def get_course(self, submission: Submission) -> Course:
-        try:
-            course = self.course_factory.get_course(submission.courseid)
-        except Exception as e:
-            if not submission.courseid:
-                self._logger.error(
-                    f"Submission {submission._id} is not associated with any course. "
-                    "Has the submission been corrupted?"
-                )
-            else:
-                self._logger.error(
-                    f"Unable to find course with course ID {submission.courseid}. "
-                    "Has it been deleted?"
-                )
-            raise InternalServerError("Unable to display submission.")
-        return course
 
-    def get_task(self, submission: Submission, course: Course) -> Task:
-        try:
-            task = course.get_task(submission.taskid)
-        except Exception as e:
-            if not submission.taskid:
-                self._logger.error(
-                    f"Submission {submission._id} is not associated with a task. "
-                    "Has the submission been corrupted?"
-                )
-            else:
-                self._logger.error(
-                    f"Unable to find task with task ID {submission.taskid}. "
-                    "Has it been deleted?"
-                )
-            raise InternalServerError("Unable to display submission.")
-        return task
-
-    def get_submission(self, submissionid: str) -> Submission:
-        """Slimmed down version of SubmissionPage.fetch_submission.
-        Only returns Submission, instead of Tuple[Course, Task, OrderedDict]"""
-
-        try:
-            submission = self.submission_manager.get_submission(submissionid, False)
-            if not submission:
-                raise NotFound(description=_("This submission doesn't exist."))
-        except InvalidId as ex:
-            self._logger.info("Invalid ObjectId : %s", submissionid)
-            raise Forbidden(description=_("Invalid ObjectId."))
-        return get_submission(submission)
-
-
-class CodingStyleGrading(SubmissionPage):
+class CodingStyleGrading(SubmissionPage, SubmissionMixin, AdminPageMixin):
     """Page that lets administrators grade the coding style of a submission."""
 
     _logger = get_logger()
@@ -135,21 +82,20 @@ class CodingStyleGrading(SubmissionPage):
 
     def GET_AUTH(self, submissionid: str) -> str:
         """Displays coding style grading page for a specific submission."""
-        course, task, sub = self.fetch_submission(submissionid)
+        course, task, submission = self.get_submission(submissionid)
+        self.do_check_course_privileges(course)
 
-        # TODO: should sub["status"] == "error" show an error message?
-
-        # Validate submission and check if it has coding style grades
-        submission = get_submission(sub)
+        # get grades from submission (if exists) or create new from enabled config categories
         grades = submission.custom.coding_style_grades
         if not grades:
             grades = get_grades(self.config.enabled)
-        # Add any missing grading categories
-        grades = add_config_categories(grades, self.config)
-        submission.custom.coding_style_grades = grades
+        else:
+            # Add any missing grading categories from existing grades
+            # if submission was graded prior to new categories being enabled
+            grades = add_config_categories(grades, self.config)
 
-        authors = get_submission_authors_realname(self, submission)
-        submitted_on = get_submission_timestamp(submission)
+        authors = self.get_submission_authors_realname(submission)
+        submitted_on = submission.get_timestamp()
 
         # Check if page is displayed after updating submission grades
         # Display alert denoting success of update:
@@ -165,7 +111,7 @@ class CodingStyleGrading(SubmissionPage):
             course=course,
             task=task,
             submission=submission,
-            grades=submission.custom.coding_style_grades,
+            grades=grades,
             config=self.config,
             success=success,
         )
@@ -174,10 +120,12 @@ class CodingStyleGrading(SubmissionPage):
         """Adds or updates the coding style grades of a submission."""
         # Parse grades from grading form
         grades = self.parse_form_data(request.form)
+        course, task, submission = self.get_submission(submissionid)
+        self.do_check_course_privileges(course)
 
         success = True
         try:
-            self.update_submission_grades(submissionid, grades)
+            self.update_submission_grades(submission, grades)
         except Exception as e:
             self._logger.exception(
                 f"Failed to validate request body for submission {submissionid}: {grades}"
@@ -190,15 +138,15 @@ class CodingStyleGrading(SubmissionPage):
         )
 
     def put(self, submissionid: str, *args, **kwargs) -> Union[str, Response]:
-        """We (ab)use the superclass `flask.views.MethodView` here to add a PUT rule for the view.
-
-        INGInious only implements their own `GET_AUTH` and `POST_AUTH` methods,
-        so we use this method to add support for partial updates of Coding Style Grades,
-        such as updating only a single category or removing a category altogether.
-
-        Right now, the only supported operation is removing a grading category
-        from a submission.
-        """
+        """Perform a partial update of a submission."""
+        # We (ab)use the superclass `flask.views.MethodView` here to add a PUT rule for the view.
+        #
+        # INGInious only implements their own `GET_AUTH` and `POST_AUTH` methods,
+        # so we use this method to add support for partial updates of Coding Style Grades,
+        # such as updating only a single category or removing a category altogether.
+        #
+        # Right now, the only supported operation is removing a grading category
+        # from a submission.
 
         # Retrieve submission, then check permissions.
         sub = self.submission_manager.get_submission(submissionid, user_check=False)
@@ -231,7 +179,7 @@ class CodingStyleGrading(SubmissionPage):
             Name of the category to remove.
         """
         submission.custom.coding_style_grades.remove_category(category)
-        self._update_submission(submission)
+        self.update_submission(submission)
 
     def parse_form_data(self, form_data: ImmutableMultiDict) -> GradesIn:
         """Transforms flat form data into nested data that can be parsed
@@ -270,7 +218,7 @@ class CodingStyleGrading(SubmissionPage):
         return out
 
     def update_submission_grades(
-        self, submissionid: str, grades_data: GradesIn
+        self, submission: Submission, grades_data: GradesIn
     ) -> None:
         """Attempts to update a submission with a new set of coding style grades.
 
@@ -293,10 +241,6 @@ class CodingStyleGrading(SubmissionPage):
         `ValidationError`
             Unable to validate new grades.
         """
-        # Get the submission
-        sub = self.submission_manager.get_submission(submissionid, user_check=False)
-        submission = get_submission(sub)
-
         # Add grade data to the submission
         #
         # NOTE:
@@ -326,9 +270,9 @@ class CodingStyleGrading(SubmissionPage):
         # If validation fails, ValidationError is raised
         submission.custom.coding_style_grades = get_grades(grades)
 
-        self._update_submission(submission)
+        self.update_submission(submission)
 
-    def _update_submission(self, submission: Submission) -> None:
+    def update_submission(self, submission: Submission) -> None:
         """Finds an existing submission and updates it with new data.
 
         Returns updated submission, or None if submission was not found.

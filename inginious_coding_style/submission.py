@@ -2,6 +2,8 @@ from datetime import datetime
 from typing import Any, List, Optional, OrderedDict, Union
 
 from bson import ObjectId
+from inginious.frontend.courses import Course
+from inginious.frontend.tasks import Task
 from pydantic import BaseModel, Field, validator, ValidationError
 
 from ._types import GradesIn
@@ -87,10 +89,16 @@ class Submission(BaseModel):
     def is_group_submission(self) -> bool:
         return len(self.username) > 1
 
+    def get_timestamp(self) -> str:
+        s = self.submitted_on
+        return s.strftime("%Y-%m-%d %H:%M:%S") if s else "Unknown"
+
     def get_weighted_mean(self, config: PluginConfig) -> float:
-        grades = self.custom.coding_style_grades
         base_grade = self.grade
-        style_mean = grades.get_mean(config, round_grade=False)
+        style_grades = self.custom.coding_style_grades
+        if not style_grades:
+            return base_grade
+        style_mean = style_grades.get_mean(config, round_grade=False)
 
         # Calculate weighting
         style_grade_coeff = config.weighted_mean.weighting

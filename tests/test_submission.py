@@ -1,10 +1,11 @@
-from inginious_coding_style.config import PluginConfig
+from datetime import datetime
 
 import pytest
+from hypothesis import HealthCheck, given, settings
+from hypothesis import strategies as st
+from inginious_coding_style.config import PluginConfig
 from inginious_coding_style.grades import get_grades
 from inginious_coding_style.submission import Submission, get_submission
-
-from hypothesis import given, strategies as st, settings, HealthCheck
 
 
 @pytest.mark.parametrize(
@@ -154,3 +155,24 @@ def test_get_weighted_mean_fuzz(
     weighted_mean = (sub.grade * base_grade_coeff) + (mean_style * style_grade_coeff)
 
     assert pytest.approx(sub.get_weighted_mean(conf), weighted_mean)
+
+
+@pytest.mark.parametrize(
+    "submission",
+    [
+        pytest.lazy_fixture("submission_nogrades"),
+        pytest.lazy_fixture("submission_grades"),
+    ],
+)
+def test_get_submission_timestamp(submission):
+    s = get_submission(submission)
+    s.submitted_on = datetime(year=2021, month=8, day=4, hour=12, minute=0, second=0)
+    assert s.get_timestamp() == "2021-08-04 12:00:00"
+
+
+def test_get_submission_timestamp_unknown(submission_grades):
+    # The submitted_on attribute should never be None, but we test
+    # its behavior regardless
+    s = get_submission(submission_grades)
+    s.submitted_on = None
+    assert s.get_timestamp() == "Unknown"
