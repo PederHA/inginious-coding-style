@@ -175,9 +175,10 @@ class CodingStyleGrading(SubmissionPage, SubmissionMixin, AdminPageMixin):
         submission.delete_coding_style_grades()
         self.update_submission(submission)
 
-        # https://htmx.org/docs/#response-headers
         return Response(
-            "ok", headers={"HX-Redirect": f"/admin/{course.get_id()}/submissions"}
+            "ok",
+            # https://htmx.org/docs/#response-headers
+            headers={"HX-Refresh": "true"},
         )
 
     def remove_category_from_submission(
