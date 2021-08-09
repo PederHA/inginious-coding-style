@@ -2,6 +2,21 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
+## 1.3.0 (Aug 9th, 2021)
+
+### Added
+
+- Button to delete coding style grades from a submission.
+
+### Fixed
+
+- Permission checking for admin-only pages.
+    - Prior to this version, students could edit their own (but not other's) submissions' coding style grades. (oops)
+
+### Changed
+
+- Refactored submission, course and task retrieval for `INGIniousPage` subclasses. They now share a common interface for retrieving these.
+
 ## 1.2.0 (Aug 8th, 2021)
 
 ### Added
