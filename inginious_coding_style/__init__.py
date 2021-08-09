@@ -11,13 +11,13 @@ from inginious.frontend.plugin_manager import PluginManager
 from inginious.frontend.tasks import Task
 from inginious.frontend.template_helper import TemplateHelper
 from werkzeug.datastructures import ImmutableMultiDict
-from werkzeug.exceptions import BadRequest, Forbidden, NotFound
+from werkzeug.exceptions import BadRequest, NotFound
 from werkzeug.wrappers.response import Response
 
 from ._types import GradesIn
 from .config import PluginConfig, get_config
 from .exceptions import init_exception_handlers
-from .grades import add_config_categories, get_grades, CodingStyleGrades
+from .grades import add_config_categories, get_grades
 from .logger import get_logger
 from .mixins import AdminPageMixin, SubmissionMixin
 from .submission import Submission, get_submission
@@ -90,8 +90,8 @@ class CodingStyleGrading(SubmissionPage, SubmissionMixin, AdminPageMixin):
         if not grades:
             grades = get_grades(self.config.enabled)
         else:
-            # Add any missing grading categories from existing grades
-            # if submission was graded prior to new categories being enabled
+            # Add any missing grading categories to existing grades
+            # if submission was graded prior to any new categories being enabled
             grades = add_config_categories(grades, self.config)
 
         authors = self.get_submission_authors_realname(submission)
@@ -138,7 +138,7 @@ class CodingStyleGrading(SubmissionPage, SubmissionMixin, AdminPageMixin):
         )
 
     def put(self, submissionid: str, *args, **kwargs) -> Union[str, Response]:
-        """Perform a partial update of a submission."""
+        """Performs a partial update of a submission."""
         # We (ab)use the superclass `flask.views.MethodView` here to add a PUT rule for the view.
         #
         # INGInious only implements their own `GET_AUTH` and `POST_AUTH` methods,
@@ -305,7 +305,7 @@ class CodingStyleGrading(SubmissionPage, SubmissionMixin, AdminPageMixin):
         """
         Finds the weighted mean of a submission's base grade and coding style grades
         and updates its entry in the DB collection 'user_tasks', which is a collection
-        that records top submissions for every user for every task.
+        that holds top submissions for every user for each task.
 
         Weights coding style grades according to weighting defined in plugin config.
 
