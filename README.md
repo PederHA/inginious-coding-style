@@ -71,6 +71,10 @@ plugins:
 - [ ] Make each coding style grade progress bar on `/course/<courseid>` a clickable element that links to the relevant coding style grades page (`/submission/<submissionid>/codingstyle`) for
 the relevant task.
 
+### Admin/Tutor Features
+
+- [ ] Add `graded_by: List[str]` attribute to `CodingStyleGrades` to record which admin/tutor graded the submission's coding style.
+
 ### Plugin Configuration
 
 - [ ] Add ability to enable/disable grading categories on a per-course basis.
