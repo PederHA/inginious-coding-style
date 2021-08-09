@@ -44,6 +44,9 @@ class CodingStyleGrades(BaseModel):
                     return True
         return False
 
+    def __len__(self) -> int:
+        return len(self.__root__)
+
     def __getitem__(self, key: str) -> GradingCategory:
         return self.__root__[key]
 
