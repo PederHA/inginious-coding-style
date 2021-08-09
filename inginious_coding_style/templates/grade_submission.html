@@ -24,13 +24,24 @@
         <td>Submitted</td>
         <td>{{ submitted_on }}</td>
     </tr>
-    {% if grades %}
+    {% if submission.custom.coding_style_grades %}
     <tr>
         <td>Mean style grade</td>
         <td>{{grades.get_mean(config)}} / 100</td>
     </tr>
     {% endif %}
 </table>
+{% if submission.custom.coding_style_grades %}
+<div class="col">
+<button type="button"
+        class="btn btn-danger"
+        hx-delete="/admin/codingstyle/submission/{{submission._id}}"
+        hx-swap="none"
+        hx-confirm="Are you sure you want to remove coding style grades from the submission?">
+Delete feedback
+</button>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block navbar %}
@@ -81,8 +92,17 @@
 {%- endif %}
 
 <div class="container-fluid">
-    <h1 class="card-title"> Coding Style Grading</h1>
-    <p>Add grades to each category and optionally give feedback.</p>
+    <div class="row">
+        <div class="col">
+            <h1 class="card-title"> Coding Style Grading</h1>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <p>Add grades to each category and optionally give feedback.</p>
+        </div>
+    </div>
+
     <hr/>
 
     <form action="/admin/codingstyle/submission/{{submission._id}}" method="POST">

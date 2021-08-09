@@ -165,6 +165,22 @@ class CodingStyleGrading(SubmissionPage, SubmissionMixin, AdminPageMixin):
         # TODO: add other PUT operations
         raise BadRequest("Unsupported operation")
 
+    def delete(self, submissionid: str, *args, **kwargs) -> Response:
+        """Removes coding style grades from a submission."""
+        course, task, submission = self.get_submission(submissionid)
+        self.do_check_course_privileges(course)
+        if not submission.custom.coding_style_grades:
+            raise BadRequest("Submission has no coding style grades.")
+
+        # HACK: assign an empty CodingStyleGrades object to overwrite current grades
+        submission.custom.coding_style_grades = CodingStyleGrades()
+        self.update_submission(submission)
+
+        # https://htmx.org/docs/#response-headers
+        return Response(
+            "ok", headers={"HX-Redirect": f"/admin/{course.get_id()}/submissions"}
+        )
+
     def remove_category_from_submission(
         self, submission: Submission, category: str
     ) -> None:
