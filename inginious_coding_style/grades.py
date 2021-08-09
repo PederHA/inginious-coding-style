@@ -117,6 +117,10 @@ class CodingStyleGrades(BaseModel):
         """Returns a dict version of its own `__root__` attribute."""
         return super().dict()["__root__"]
 
+    def delete_grades(self) -> None:
+        """Deletes ALL grades by clearing the __root__ dict."""
+        self.__root__.clear()
+
 
 def get_grades(
     grades: Union[GradesIn, Dict[str, GradingCategory]]

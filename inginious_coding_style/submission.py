@@ -106,6 +106,10 @@ class Submission(BaseModel):
 
         return (base_grade * base_grade_coeff) + (style_mean * style_grade_coeff)
 
+    def delete_coding_style_grades(self) -> None:
+        """Deletes ALL coding style grades from a submission."""
+        self.custom.coding_style_grades.delete_grades()
+
 
 def get_submission(submission: OrderedDict[str, Any]) -> Submission:
     """Validates a submission returned by

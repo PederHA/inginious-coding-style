@@ -172,8 +172,7 @@ class CodingStyleGrading(SubmissionPage, SubmissionMixin, AdminPageMixin):
         if not submission.custom.coding_style_grades:
             raise BadRequest("Submission has no coding style grades.")
 
-        # HACK: assign an empty CodingStyleGrades object to overwrite current grades
-        submission.custom.coding_style_grades = CodingStyleGrades()
+        submission.delete_coding_style_grades()
         self.update_submission(submission)
 
         # https://htmx.org/docs/#response-headers
