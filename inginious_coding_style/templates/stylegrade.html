@@ -22,7 +22,7 @@
     {% if grades %}
     <tr>
         <td>Mean style grade</td>
-        <td>{{grades.get_mean(config) | int }} / 100</td>
+        <td>{{grades.get_mean(config) }} / 100</td>
     </tr>
     {% endif %}
 </table>
@@ -120,7 +120,7 @@
             <div class="col-md-12 p-4 ">
                 {% if grades %}
                 <h4>Average:</h4>
-                <p>{{grades.get_mean(config) | int}} / 100</p>
+                <p>{{grades.get_mean(config)}} / 100</p>
                 {% endif %}
             </div>
         </div>
