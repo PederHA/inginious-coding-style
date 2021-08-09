@@ -1,4 +1,5 @@
 import copy
+from inginious_coding_style.grades import get_grades
 
 from inginious_coding_style.submission import get_submission
 import pytest
@@ -42,6 +43,11 @@ def grades():
             "feedback": "ddd",
         },
     }
+
+
+@pytest.fixture
+def grades_pydantic(grades):
+    return get_grades(grades)
 
 
 @pytest.fixture
