@@ -21,10 +21,7 @@ from .grades import add_config_categories, get_grades
 from .logger import get_logger
 from .mixins import AdminPageMixin, SubmissionMixin
 from .submission import Submission, get_submission
-from .utils import (
-    get_best_submission,
-    has_coding_style_grades,
-)
+from .utils import get_best_submission, has_coding_style_grades
 
 __version__ = "1.3.0"
 
