@@ -60,6 +60,8 @@ plugins:
         enabled: false
         weighting: 0.25
         task_list_bar: true
+        base_grade_label: Correctness
+    style_grade_label: Coding Style
 ```
 
 <!-- ## Known Issues -->

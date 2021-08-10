@@ -45,7 +45,7 @@ def none_returns_defaults(value: Any, field: ModelField) -> Any:
 
 
 class SubmissionQuerySettings(BaseModel):
-    header: str = "csg"
+    header: str = "CSG"
     priority: int = 3000  # can you do negative numbers?
     button: bool = True
 
@@ -54,6 +54,7 @@ class WeightedMeanSettings(BaseModel):
     enabled: bool = False
     weighting: float = Field(ge=0.00, le=1.00, default=0.25)
     task_list_bar: bool = True
+    base_grade_label: str = "Correctness"
 
 
 class PluginConfigIn(BaseModel):
@@ -76,6 +77,9 @@ class PluginConfigIn(BaseModel):
     # Weighted mean grades settings
     weighted_mean: WeightedMeanSettings = Field(default_factory=WeightedMeanSettings)
 
+    # Label text for style grade bar in the task list
+    style_grade_label: str = "Coding Style"
+
     # validators
     # Reusing validators: https://pydantic-docs.helpmanual.io/usage/validators/#reuse-validators
     # "*" validator: https://pydantic-docs.helpmanual.io/usage/validators/#pre-and-per-item-validators
@@ -97,20 +101,20 @@ class PluginConfig(BaseModel):
     enabled: Dict[str, GradingCategory] = {}
     submission_query: SubmissionQuerySettings
     weighted_mean: WeightedMeanSettings
+    style_grade_label: str
+
+    class Config:
+        extras = "ignore"
 
     def __init__(self, config_in: PluginConfigIn) -> None:
-        enabled = self._make_dict_from_enabled(
+        # Merge the two attributes "enabled" and "categories"
+        config_in.enabled = self._make_dict_from_enabled(
             enabled=config_in.enabled,
             custom_categories={c.id: c for c in config_in.categories},
         )
-        super().__init__(
-            name=config_in.name,
-            enabled=enabled,
-            weighted_mean=config_in.weighted_mean,
-            submission_query=config_in.submission_query,
-        )
+        super().__init__(**(config_in.dict()))
 
-    # TODO: rename method
+    # TODO: REFACTOR.
     def _make_dict_from_enabled(
         self, enabled: List[str], custom_categories: Dict[str, GradingCategory]
     ) -> Dict[str, GradingCategory]:

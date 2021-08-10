@@ -49,6 +49,8 @@ plugins:
     weighted_mean:
         enabled: true
         weighting: 0.25
+        base_grade_label: Correctness
+    style_grade_label: Coding Style
 ```
 <!-- TODO: https://squidfunk.github.io/mkdocs-material/reference/data-tables/#configuration -->
 {% macro get_schema(prop, id="", required=none) -%}
@@ -180,6 +182,21 @@ Show separate progress bars for correctness and coding style grades in addition 
 ![task_list_bar preview](img/configuration/01_task_list_bar.png)
 
 {{ get_schema(schema.definitions.WeightedMeanSettings.properties.task_list_bar) }}
+
+#### `base_grade_label`
+
+The label for the progress bar enabled by `task_list_bar`. Has no effect if `task_list_bar` is disabled.
+
+{{ get_schema(schema.definitions.WeightedMeanSettings.properties.base_grade_label) }}
+
+---
+
+### `style_grade_label`
+
+The label for the style grade progress bar displayed for every task on a course's task list.
+
+{{ get_schema(schema.properties.style_grade_label) }}
+
 ---
 
 <!-- Only display this section if we have generated data/categories.-->
