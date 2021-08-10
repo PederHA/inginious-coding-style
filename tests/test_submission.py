@@ -1,4 +1,6 @@
 from datetime import datetime
+from inginious.frontend.courses import Course
+from inginious.frontend.tasks import Task
 
 import pytest
 from hypothesis import HealthCheck, given, settings
@@ -6,6 +8,7 @@ from hypothesis import strategies as st
 from inginious_coding_style.config import PluginConfig
 from inginious_coding_style.grades import get_grades
 from inginious_coding_style.submission import Submission, get_submission
+from unittest.mock import Mock
 
 
 @pytest.mark.parametrize(
@@ -15,16 +18,20 @@ from inginious_coding_style.submission import Submission, get_submission
         pytest.lazy_fixture("submission_grades"),
     ],
 )
-def test_get_submission(submission):
+def test_get_submission(submission, course, task):
     """Tests validation of a submission with and without grades."""
     # FIXME: this test will not catch if a value is OMITTED after parsing
     # we should iterate through the original submission instead of the parsed submission
-    s = get_submission(submission)
+    s = get_submission(submission, course, task)
     for attr_name, attr_value in s:
         if attr_name == "custom":
             assert attr_value.coding_style_grades == get_grades(
                 submission[attr_name].get("coding_style_grades", {})
             )
+        # Skip these two attributes
+        # TODO: FIX FIXTURES
+        elif attr_name in ["course", "task"]:
+            continue
         else:
             assert submission[attr_name] == attr_value
 
@@ -44,7 +51,14 @@ def test_get_submission(submission):
     ],
 )
 def test_get_submission_same_as_constructor(
-    submission, courseid, taskid, status, submitted_on, username
+    submission,
+    courseid,
+    taskid,
+    status,
+    submitted_on,
+    username,
+    course,
+    task,
 ):
     """Tests that `get_submission()` returns the same as unpacking kwargs to
     `Submission`'s constructor."""
@@ -53,17 +67,19 @@ def test_get_submission_same_as_constructor(
     submission["status"] = status
     submission["submitted_on"] = submitted_on
     submission["username"] = username
-    assert Submission(**submission) == get_submission(submission)
+    assert Submission(**submission, course=course, task=task) == get_submission(
+        submission, course, task
+    )
 
 
-def test_group_submission(submission_grades):
+def test_group_submission(submission_grades, course, task):
     submission_grades["username"] = ["user_one", "user_two"]
-    submission = get_submission(submission_grades)
+    submission = get_submission(submission_grades, course, task)
     assert submission.is_group_submission
     assert len(submission.username) == 2
 
 
-def test_mangled_submission(submission_nogrades):
+def test_mangled_submission(submission_nogrades, course, task):
     # TODO: make submission fixtures function scoped
     # while not breaking hypothesis tests. Context manager?
     for k in [
@@ -83,7 +99,7 @@ def test_mangled_submission(submission_nogrades):
         # The absense of these keys should not make the submission fail to validate
         submission_nogrades.pop(k)
         assert get_submission(
-            submission_nogrades
+            submission_nogrades, course, task
         ), f"Absence of {k} causes validation error"
 
 
@@ -164,15 +180,35 @@ def test_get_weighted_mean_fuzz(
         pytest.lazy_fixture("submission_grades"),
     ],
 )
-def test_get_submission_timestamp(submission):
-    s = get_submission(submission)
+def test_get_submission_timestamp(submission, course, task):
+    s = get_submission(submission, course, task)
     s.submitted_on = datetime(year=2021, month=8, day=4, hour=12, minute=0, second=0)
     assert s.get_timestamp() == "2021-08-04 12:00:00"
 
 
-def test_get_submission_timestamp_unknown(submission_grades):
+def test_get_submission_timestamp_unknown(submission_grades, course, task):
     # The submitted_on attribute should never be None, but we test
     # its behavior regardless
-    s = get_submission(submission_grades)
+    s = get_submission(submission_grades, course, task)
     s.submitted_on = None
     assert s.get_timestamp() == "Unknown"
+
+
+class MockSubmission(Submission):
+    course = Mock(spec=Course)
+    task = Mock(spec=Task)
+
+
+@given(st.builds(MockSubmission))
+def test_submission_fuzz(sub: Submission):
+    assert 0 <= sub.grade <= 100
+    assert len(sub.username) != 0
+    assert sub.submitted_on is not None
+    assert datetime.now() > sub.submitted_on
+    assert sub.custom.coding_style_grades is not None
+
+    # Test serialization
+    s = sub.dict()
+    assert "course" not in s
+    assert "task" not in s
+    assert get_submission(s, sub.course, sub.task) == sub

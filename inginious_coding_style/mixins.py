@@ -1,5 +1,5 @@
 from logging import Logger
-from typing import List, Tuple
+from typing import List
 
 from bson.errors import InvalidId
 from inginious.frontend.course_factory import CourseFactory
@@ -9,6 +9,7 @@ from inginious.frontend.tasks import Task
 from inginious.frontend.user_manager import UserManager
 from werkzeug.exceptions import Forbidden, InternalServerError, NotFound
 
+from ._types import INGIniousSubmission
 from .submission import Submission, get_submission
 
 
@@ -33,28 +34,31 @@ class SubmissionMixin(BaseMixin):
         self,
         submissionid: str,
         user_check: bool = False,
-    ) -> Tuple[Course, Task, Submission]:
+    ) -> Submission:
         """Alternative implementation of INGInious's
         `SubmissionPage.fetch_submission`, that provides more robust
         exception handling, checks user privileges, as well as returning
-        the submission as a `Submission` object."""
+        the a `Submission` object instead of a `Tuple[Course, Task, INGIniousSubmission]`."""
         submission = self._fetch_submission(submissionid, user_check)
         course = self._fetch_course(submission)
         task = self._fetch_task(submission, course)
-        return course, task, submission
+        return get_submission(submission, course, task)
 
     def get_submission_authors_realname(self, submission: Submission) -> List[str]:
         """Retrieves a list of the real names of a submission's authors."""
         names = []
         for username in submission.username:
             realname = self.user_manager.get_user_realname(username)
-            if realname is None:
+            if realname is not None:
+                names.append(realname)
+            else:
+                names.append(username)
                 self._logger.debug(f"Unknown user: {username}")
-                continue  # ignore unknown username
-            names.append(realname)
         return names or ["Unknown"]  # fall back name
 
-    def _fetch_submission(self, submissionid: str, user_check: bool) -> Submission:
+    def _fetch_submission(
+        self, submissionid: str, user_check: bool
+    ) -> INGIniousSubmission:
         """Slimmed down version of SubmissionPage.fetch_submission.
         Only returns Submission, instead of Tuple[Course, Task, OrderedDict]"""
         try:
@@ -66,41 +70,41 @@ class SubmissionMixin(BaseMixin):
         except InvalidId as ex:
             self._logger.info("Invalid ObjectId : %s", submissionid)
             raise Forbidden(description=_("Invalid ObjectId."))
-        return get_submission(submission)
+        return submission
 
     def _fetch_course(
         self,
-        submission: Submission,
+        submission: INGIniousSubmission,
     ) -> Course:
         try:
-            course = self.course_factory.get_course(submission.courseid)
+            course = self.course_factory.get_course(submission["courseid"])
         except Exception as e:
-            if not submission.courseid:
+            if not submission.get("courseid"):
                 msg = (
-                    f"Submission {submission._id} is not associated with any course. "
+                    f"Submission {submission['_id']} is not associated with any course. "
                     "Has the submission been corrupted?"
                 )
             else:
                 msg = (
-                    f"Unable to find course with course ID {submission.courseid}. "
+                    f"Unable to find course with course ID {submission['courseid']}. "
                     "Has it been deleted?"
                 )
             self._logger.error(msg)
             raise InternalServerError("Unable to display submission.")
         return course
 
-    def _fetch_task(self, submission: Submission, course: Course) -> Task:
+    def _fetch_task(self, submission: INGIniousSubmission, course: Course) -> Task:
         try:
-            task = course.get_task(submission.taskid)
+            task = course.get_task(submission["taskid"])
         except Exception as e:
-            if not submission.taskid:
+            if not submission.get("taskid"):
                 msg = (
-                    f"Submission {submission._id} is not associated with a task. "
+                    f"Submission {submission['_id']} is not associated with a task. "
                     "Has the submission been corrupted?"
                 )
             else:
                 msg = (
-                    f"Unable to find task with task ID {submission.taskid}. "
+                    f"Unable to find task with task ID {submission['taskid']}. "
                     "Has it been deleted?"
                 )
             self._logger.error(msg)

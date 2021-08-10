@@ -6,7 +6,7 @@ from inginious.frontend.courses import Course
 from inginious.frontend.tasks import Task
 from pydantic import BaseModel, Field, validator, ValidationError
 
-from ._types import GradesIn
+from ._types import GradesIn, INGIniousSubmission
 from .grades import CodingStyleGrades, get_grades
 from .logger import get_logger
 from .config import PluginConfig
@@ -50,8 +50,8 @@ class Submission(BaseModel):
     # the model doing any sort of validation of the values.
 
     _id: ObjectId
-    courseid: str
-    taskid: str
+    course: Course
+    task: Task
     status: Any
     submitted_on: datetime = Field(default_factory=datetime.now)
     username: List[str]
@@ -59,7 +59,7 @@ class Submission(BaseModel):
     input: Any
     archive: Any
     custom: Custom = Field(default_factory=Custom)
-    grade: float
+    grade: float = Field(ge=0.0, le=100.0)
     problems: Any
     result: Any
     state: Any
@@ -116,15 +116,22 @@ class Submission(BaseModel):
         """Deletes ALL coding style grades from a submission."""
         self.custom.coding_style_grades.delete_grades()
 
+    def dict(self, *args, **kwargs) -> dict:
+        kwargs.pop("exclude", None)
+        kwargs.pop("include", None)
+        return super().dict(exclude={"course", "task"})
 
-def get_submission(submission: OrderedDict[str, Any]) -> Submission:
+
+def get_submission(
+    submission: INGIniousSubmission, course: Course, task: Task
+) -> Submission:
     """Validates a submission returned by
     `INGIniousAuthPage.submission_manager.get_submission()`.
 
     Returns `Submission`
     """
     try:
-        sub = Submission(**submission)
+        sub = Submission(**submission, course=course, task=task)
     except ValidationError:
         get_logger().exception(f"Failed to validate submission {submission['_id']}")
         raise

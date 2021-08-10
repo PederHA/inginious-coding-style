@@ -1,7 +1,8 @@
-from typing import Any, Optional, OrderedDict
+from typing import Optional
 
 from inginious.frontend.tasks import Task
 
+from ._types import INGIniousSubmission
 from .submission import Submission, get_submission
 
 
@@ -22,10 +23,10 @@ def get_best_submission(task: Task) -> Optional[Submission]:
     for submission in submissions:
         if best is None or submission["grade"] > best["grade"]:
             best = submission
-    return get_submission(best) if best else best
+    return get_submission(best, task.get_course(), task) if best else best
 
 
-def has_coding_style_grades(submission: OrderedDict[str, Any]) -> bool:
+def has_coding_style_grades(submission: INGIniousSubmission) -> bool:
     """Checks if a submission retrieved from the INGInious submission manager
     _looks_ like it has coding style grades.
 

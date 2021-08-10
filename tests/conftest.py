@@ -1,13 +1,14 @@
 import copy
-from inginious_coding_style.grades import get_grades
-
-from inginious_coding_style.submission import get_submission
-import pytest
-
-from bson import ObjectId
 from datetime import datetime
+from unittest.mock import Mock
 
+import pytest
+from bson import ObjectId
+from inginious.frontend.courses import Course
+from inginious.frontend.tasks import Task
 from inginious_coding_style.config import get_config
+from inginious_coding_style.grades import get_grades
+from inginious_coding_style.submission import get_submission
 
 
 # TODO: fix scope / use generator fixture / create context manager
@@ -91,8 +92,18 @@ def submission_grades(submission_nogrades, coding_style_grades_dict):
 
 
 @pytest.fixture
-def submission_pydantic_grades(submission_grades):
-    yield get_submission(submission_grades)
+def submission_pydantic_grades(submission_grades, course, task):
+    yield get_submission(submission_grades, course, task)
+
+
+@pytest.fixture(scope="session")
+def course():
+    return Mock(spec=Course)
+
+
+@pytest.fixture(scope="session")
+def task():
+    return Mock(spec=Task)
 
 
 @pytest.fixture

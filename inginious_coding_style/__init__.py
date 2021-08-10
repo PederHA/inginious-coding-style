@@ -14,7 +14,7 @@ from werkzeug.datastructures import ImmutableMultiDict
 from werkzeug.exceptions import BadRequest, NotFound
 from werkzeug.wrappers.response import Response
 
-from ._types import GradesIn
+from ._types import GradesIn, INGIniousSubmission
 from .config import PluginConfig, get_config
 from .exceptions import init_exception_handlers
 from .grades import add_config_categories, get_grades
@@ -45,7 +45,7 @@ class StudentSubmissionCodingStyle(INGIniousAuthPage, SubmissionMixin):
 
     def GET_AUTH(self, submissionid: str) -> str:
         """Displays all coding style grades for a given course for a user."""
-        course, task, submission = self.get_submission(submissionid, user_check=True)
+        submission = self.get_submission(submissionid, user_check=True)
 
         if not submission.custom.coding_style_grades:
             raise NotFound("Submission has no coding style grades.")
@@ -59,8 +59,8 @@ class StudentSubmissionCodingStyle(INGIniousAuthPage, SubmissionMixin):
             submission_authors=names,
             submitted_on=submitted_on,
             user_manager=self.user_manager,
-            course=course,
-            task=task,
+            course=submission.course,
+            task=submission.task,
             submission=submission,
             grades=submission.custom.coding_style_grades,
             config=self.config,
@@ -79,8 +79,8 @@ class CodingStyleGrading(SubmissionPage, SubmissionMixin, AdminPageMixin):
 
     def GET_AUTH(self, submissionid: str) -> str:
         """Displays coding style grading page for a specific submission."""
-        course, task, submission = self.get_submission(submissionid)
-        self.do_check_course_privileges(course)
+        submission = self.get_submission(submissionid)
+        self.do_check_course_privileges(submission.course)
 
         # get grades from submission (if exists) or create new from enabled config categories
         grades = submission.custom.coding_style_grades
@@ -105,8 +105,8 @@ class CodingStyleGrading(SubmissionPage, SubmissionMixin, AdminPageMixin):
             user_manager=self.user_manager,
             submitted_on=submitted_on,
             authors=authors,
-            course=course,
-            task=task,
+            course=submission.course,
+            task=submission.task,
             submission=submission,
             grades=grades,
             config=self.config,
@@ -117,8 +117,8 @@ class CodingStyleGrading(SubmissionPage, SubmissionMixin, AdminPageMixin):
         """Adds or updates the coding style grades of a submission."""
         # Parse grades from grading form
         grades = self.parse_form_data(request.form)
-        course, task, submission = self.get_submission(submissionid)
-        self.do_check_course_privileges(course)
+        submission = self.get_submission(submissionid)
+        self.do_check_course_privileges(submission.course)
 
         success = True
         try:
@@ -145,10 +145,7 @@ class CodingStyleGrading(SubmissionPage, SubmissionMixin, AdminPageMixin):
         # Right now, the only supported operation is removing a grading category
         # from a submission.
 
-        # Retrieve submission, then check permissions.
-        sub = self.submission_manager.get_submission(submissionid, user_check=False)
-        submission = get_submission(sub)
-        self.get_course_and_check_rights(submission.courseid, submission.taskid)
+        submission = self.get_submission(submissionid)
 
         # Check if a category should be removed
         if category := request.args.get("remove"):
@@ -164,8 +161,8 @@ class CodingStyleGrading(SubmissionPage, SubmissionMixin, AdminPageMixin):
 
     def delete(self, submissionid: str, *args, **kwargs) -> Response:
         """Removes coding style grades from a submission."""
-        course, task, submission = self.get_submission(submissionid)
-        self.do_check_course_privileges(course)
+        submission = self.get_submission(submissionid)
+        self.do_check_course_privileges(submission.course)
         if not submission.custom.coding_style_grades:
             raise BadRequest("Submission has no coding style grades.")
 
@@ -181,7 +178,7 @@ class CodingStyleGrading(SubmissionPage, SubmissionMixin, AdminPageMixin):
     def remove_category_from_submission(
         self, submission: Submission, category: str
     ) -> None:
-        """Removes a category from a submission.
+        """Removes a grading category from a submission.
         Does nothing if submission does not have a category with that name.
 
         Parameters
@@ -326,7 +323,7 @@ class CodingStyleGrading(SubmissionPage, SubmissionMixin, AdminPageMixin):
 def submission_admin_menu(
     course: Course,
     task: Task,
-    submission: OrderedDict[str, Any],
+    submission: INGIniousSubmission,
     template_helper: TemplateHelper,
 ) -> str:
     return template_helper.render(
@@ -352,7 +349,7 @@ def submission_query_header(
 
 def submission_query_data(
     course: Course,
-    submission: OrderedDict[str, Any],
+    submission: INGIniousSubmission,
     template_helper: TemplateHelper,
 ) -> str:
     return template_helper.render(
@@ -365,7 +362,7 @@ def submission_query_data(
 
 def submission_query_button(
     course: Course,
-    submission: OrderedDict[str, Any],
+    submission: INGIniousSubmission,
     template_helper: TemplateHelper,
 ) -> str:
     # TODO: in the future, we should attempt to cache submission info
