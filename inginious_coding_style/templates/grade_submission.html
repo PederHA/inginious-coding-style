@@ -143,6 +143,7 @@ Delete feedback
                                 hx-put="/admin/codingstyle/submission/{{submission._id}}?remove={{id}}"
                                 style=" border:none; background-color:white;"
                                 hx-swap="none"
+                                hx-confirm="Are you sure you want to remove the inactive category {{ grade.name }}"
                                 data-toggle="tooltip"
                                 data-placement="top"
                                 title="Remove grade from submission"
