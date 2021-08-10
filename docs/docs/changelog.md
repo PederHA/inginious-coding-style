@@ -2,6 +2,14 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
+## 1.4.0 (Aug 10th, 2021)
+
+### Added
+
+- Confirmation prompt when deleting inactive category.
+- Customizable labels for grade progress bars in the task list.
+- Rounding of weighted mean grade.
+
 ## 1.3.0 (Aug 9th, 2021)
 
 ### Added
