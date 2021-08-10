@@ -49,6 +49,9 @@ plugins:
     weighted_mean:
         enabled: true
         weighting: 0.25
+        round: true
+        round_digits: 2
+        task_list_bar: true
         base_grade_label: Correctness
     style_grade_label: Coding Style
 ```
@@ -171,9 +174,31 @@ Enable weighted mean grade calculation.
 
 #### `weighting`
 
-Weighting of coding style grades.
+How much of the final grade the coding style grades should make up.
+
+##### Example
+
+```py
+weighting = 0.25
+base_grade_weight = 1 - weighting
+base_grade_weight == 0.75
+```
+
+When `weighting` is set to 0.25, the style grades will make up 25% of the submission's final grade, while its base grade will make up the remaining 75%.
 
 {{ get_schema(schema.definitions.WeightedMeanSettings.properties.weighting) }}
+
+#### `round`
+
+Whether to round the weighted mean grade or not.
+
+{{ get_schema(schema.definitions.WeightedMeanSettings.properties.round) }}
+
+#### `round_digits`
+
+Number of digits after decimal point to round to. Has no effect if `round` is disabled.
+
+{{ get_schema(schema.definitions.WeightedMeanSettings.properties.round_digits) }}
 
 #### `task_list_bar`
 

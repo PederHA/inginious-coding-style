@@ -109,7 +109,10 @@ class Submission(BaseModel):
         style_grade_coeff = config.weighted_mean.weighting
         base_grade_coeff = 1 - style_grade_coeff
 
-        return (base_grade * base_grade_coeff) + (style_mean * style_grade_coeff)
+        mean = (base_grade * base_grade_coeff) + (style_mean * style_grade_coeff)
+        if not config.weighted_mean.round:
+            return mean
+        return round(mean, config.weighted_mean.round_digits)
 
     def delete_coding_style_grades(self) -> None:
         """Deletes ALL coding style grades from a submission."""

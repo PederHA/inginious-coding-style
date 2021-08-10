@@ -57,8 +57,10 @@ plugins:
         button: true
         priority: 3000
     weighted_mean:
-        enabled: false
+        enabled: true
         weighting: 0.25
+        round: true
+        round_digits: 2
         task_list_bar: true
         base_grade_label: Correctness
     style_grade_label: Coding Style
@@ -85,6 +87,7 @@ the relevant task.
 ### Robustness
 
 - [ ] Better exception handling for Pydantic `ValidationError`. If something fails to validate, we should be able to display human-readable messages both in the web interface and in the logs.
+- Add an "admin/tutor only" decorator that can be applied to methods that bars student users from calling them.
 
 <!-- - [x] Complete -->
 <!-- - [ ] Incomplete -->
