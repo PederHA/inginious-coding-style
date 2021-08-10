@@ -92,8 +92,8 @@ def submission_grades(submission_nogrades, coding_style_grades_dict):
 
 
 @pytest.fixture
-def submission_pydantic_grades(submission_grades, course, task):
-    yield get_submission(submission_grades, course, task)
+def submission_pydantic_grades(submission_grades):
+    yield get_submission(submission_grades)
 
 
 @pytest.fixture(scope="session")

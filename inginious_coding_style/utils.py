@@ -23,7 +23,7 @@ def get_best_submission(task: Task) -> Optional[Submission]:
     for submission in submissions:
         if best is None or submission["grade"] > best["grade"]:
             best = submission
-    return get_submission(best, task.get_course(), task) if best else best
+    return get_submission(best) if best else best
 
 
 def has_coding_style_grades(submission: INGIniousSubmission) -> bool:

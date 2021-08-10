@@ -18,20 +18,16 @@ from unittest.mock import Mock
         pytest.lazy_fixture("submission_grades"),
     ],
 )
-def test_get_submission(submission, course, task):
+def test_get_submission(submission):
     """Tests validation of a submission with and without grades."""
     # FIXME: this test will not catch if a value is OMITTED after parsing
     # we should iterate through the original submission instead of the parsed submission
-    s = get_submission(submission, course, task)
+    s = get_submission(submission)
     for attr_name, attr_value in s:
         if attr_name == "custom":
             assert attr_value.coding_style_grades == get_grades(
                 submission[attr_name].get("coding_style_grades", {})
             )
-        # Skip these two attributes
-        # TODO: FIX FIXTURES
-        elif attr_name in ["course", "task"]:
-            continue
         else:
             assert submission[attr_name] == attr_value
 
@@ -57,8 +53,6 @@ def test_get_submission_same_as_constructor(
     status,
     submitted_on,
     username,
-    course,
-    task,
 ):
     """Tests that `get_submission()` returns the same as unpacking kwargs to
     `Submission`'s constructor."""
@@ -67,19 +61,17 @@ def test_get_submission_same_as_constructor(
     submission["status"] = status
     submission["submitted_on"] = submitted_on
     submission["username"] = username
-    assert Submission(**submission, course=course, task=task) == get_submission(
-        submission, course, task
-    )
+    assert Submission(**submission) == get_submission(submission)
 
 
-def test_group_submission(submission_grades, course, task):
+def test_group_submission(submission_grades):
     submission_grades["username"] = ["user_one", "user_two"]
-    submission = get_submission(submission_grades, course, task)
+    submission = get_submission(submission_grades)
     assert submission.is_group_submission
     assert len(submission.username) == 2
 
 
-def test_mangled_submission(submission_nogrades, course, task):
+def test_mangled_submission(submission_nogrades):
     # TODO: make submission fixtures function scoped
     # while not breaking hypothesis tests. Context manager?
     for k in [
@@ -99,7 +91,7 @@ def test_mangled_submission(submission_nogrades, course, task):
         # The absense of these keys should not make the submission fail to validate
         submission_nogrades.pop(k)
         assert get_submission(
-            submission_nogrades, course, task
+            submission_nogrades
         ), f"Absence of {k} causes validation error"
 
 
@@ -180,26 +172,21 @@ def test_get_weighted_mean_fuzz(
         pytest.lazy_fixture("submission_grades"),
     ],
 )
-def test_get_submission_timestamp(submission, course, task):
-    s = get_submission(submission, course, task)
+def test_get_submission_timestamp(submission):
+    s = get_submission(submission)
     s.submitted_on = datetime(year=2021, month=8, day=4, hour=12, minute=0, second=0)
     assert s.get_timestamp() == "2021-08-04 12:00:00"
 
 
-def test_get_submission_timestamp_unknown(submission_grades, course, task):
+def test_get_submission_timestamp_unknown(submission_grades):
     # The submitted_on attribute should never be None, but we test
     # its behavior regardless
-    s = get_submission(submission_grades, course, task)
+    s = get_submission(submission_grades)
     s.submitted_on = None
     assert s.get_timestamp() == "Unknown"
 
 
-class MockSubmission(Submission):
-    course = Mock(spec=Course)
-    task = Mock(spec=Task)
-
-
-@given(st.builds(MockSubmission))
+@given(st.builds(Submission))
 def test_submission_fuzz(sub: Submission):
     assert 0 <= sub.grade <= 100
     assert len(sub.username) != 0
@@ -209,6 +196,4 @@ def test_submission_fuzz(sub: Submission):
 
     # Test serialization
     s = sub.dict()
-    assert "course" not in s
-    assert "task" not in s
-    assert get_submission(s, sub.course, sub.task) == sub
+    assert get_submission(s) == sub

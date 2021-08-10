@@ -28,8 +28,7 @@ class Custom(BaseModel):
         cls, grades: Union[CodingStyleGrades, GradesIn]
     ) -> Optional[CodingStyleGrades]:
         """Attempts to parse `grades` as a `CodingStylesGrade`.
-        Falls back on `None` if grades cannot be validated.
-        If `None` is returned, the field's default factory is called."""
+        Falls back on `None` if grades cannot be validated."""
         if isinstance(grades, CodingStyleGrades):
             return grades
         try:
@@ -38,7 +37,7 @@ class Custom(BaseModel):
             if grades:
                 # FIXME: Find out if this log is actually helpful
                 get_logger().error(f"Failed to validate grades: {grades}")
-            return None
+        return None
 
 
 class Submission(BaseModel):
@@ -50,8 +49,8 @@ class Submission(BaseModel):
     # the model doing any sort of validation of the values.
 
     _id: ObjectId
-    course: Course
-    task: Task
+    courseid: str
+    taskid: str
     status: Any
     submitted_on: datetime = Field(default_factory=datetime.now)
     username: List[str]
@@ -116,22 +115,15 @@ class Submission(BaseModel):
         """Deletes ALL coding style grades from a submission."""
         self.custom.coding_style_grades.delete_grades()
 
-    def dict(self, *args, **kwargs) -> dict:
-        kwargs.pop("exclude", None)
-        kwargs.pop("include", None)
-        return super().dict(exclude={"course", "task"})
 
-
-def get_submission(
-    submission: INGIniousSubmission, course: Course, task: Task
-) -> Submission:
+def get_submission(submission: INGIniousSubmission) -> Submission:
     """Validates a submission returned by
     `INGIniousAuthPage.submission_manager.get_submission()`.
 
     Returns `Submission`
     """
     try:
-        sub = Submission(**submission, course=course, task=task)
+        sub = Submission(**submission)
     except ValidationError:
         get_logger().exception(f"Failed to validate submission {submission['_id']}")
         raise

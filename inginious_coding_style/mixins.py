@@ -1,5 +1,5 @@
 from logging import Logger
-from typing import List
+from typing import List, Tuple
 
 from bson.errors import InvalidId
 from inginious.frontend.course_factory import CourseFactory
@@ -34,15 +34,15 @@ class SubmissionMixin(BaseMixin):
         self,
         submissionid: str,
         user_check: bool = False,
-    ) -> Submission:
+    ) -> Tuple[Course, Task, Submission]:
         """Alternative implementation of INGInious's
         `SubmissionPage.fetch_submission`, that provides more robust
         exception handling, checks user privileges, as well as returning
-        the a `Submission` object instead of a `Tuple[Course, Task, INGIniousSubmission]`."""
+        a `Submission` instead of an `INGIniousSubmission`."""
         submission = self._fetch_submission(submissionid, user_check)
         course = self._fetch_course(submission)
         task = self._fetch_task(submission, course)
-        return get_submission(submission, course, task)
+        return course, task, submission
 
     def get_submission_authors_realname(self, submission: Submission) -> List[str]:
         """Retrieves a list of the real names of a submission's authors."""
@@ -56,9 +56,7 @@ class SubmissionMixin(BaseMixin):
                 self._logger.debug(f"Unknown user: {username}")
         return names or ["Unknown"]  # fall back name
 
-    def _fetch_submission(
-        self, submissionid: str, user_check: bool
-    ) -> INGIniousSubmission:
+    def _fetch_submission(self, submissionid: str, user_check: bool) -> Submission:
         """Slimmed down version of SubmissionPage.fetch_submission.
         Only returns Submission, instead of Tuple[Course, Task, OrderedDict]"""
         try:
@@ -70,41 +68,41 @@ class SubmissionMixin(BaseMixin):
         except InvalidId as ex:
             self._logger.info("Invalid ObjectId : %s", submissionid)
             raise Forbidden(description=_("Invalid ObjectId."))
-        return submission
+        return get_submission(submission)
 
     def _fetch_course(
         self,
-        submission: INGIniousSubmission,
+        submission: Submission,
     ) -> Course:
         try:
-            course = self.course_factory.get_course(submission["courseid"])
+            course = self.course_factory.get_course(submission.courseid)
         except Exception as e:
-            if not submission.get("courseid"):
+            if not submission.courseid:
                 msg = (
-                    f"Submission {submission['_id']} is not associated with any course. "
+                    f"Submission {submission._id} is not associated with any course. "
                     "Has the submission been corrupted?"
                 )
             else:
                 msg = (
-                    f"Unable to find course with course ID {submission['courseid']}. "
+                    f"Unable to find course with course ID {submission.courseid}. "
                     "Has it been deleted?"
                 )
             self._logger.error(msg)
             raise InternalServerError("Unable to display submission.")
         return course
 
-    def _fetch_task(self, submission: INGIniousSubmission, course: Course) -> Task:
+    def _fetch_task(self, submission: Submission, course: Course) -> Task:
         try:
-            task = course.get_task(submission["taskid"])
+            task = course.get_task(submission.taskid)
         except Exception as e:
-            if not submission.get("taskid"):
+            if submission.taskid:
                 msg = (
-                    f"Submission {submission['_id']} is not associated with a task. "
+                    f"Submission {submission._id} is not associated with a task. "
                     "Has the submission been corrupted?"
                 )
             else:
                 msg = (
-                    f"Unable to find task with task ID {submission['taskid']}. "
+                    f"Unable to find task with task ID {submission.taskid}. "
                     "Has it been deleted?"
                 )
             self._logger.error(msg)
