@@ -85,6 +85,12 @@ class Submission(BaseModel):
             custom = {"original": custom}
         return custom
 
+    @validator("username")
+    def check_empty_username(cls, username: List[str]) -> List[str]:
+        if len(username) == 0:
+            return ["Missing user"]
+        return username
+
     @property
     def is_group_submission(self) -> bool:
         return len(self.username) > 1
