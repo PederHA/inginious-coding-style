@@ -132,8 +132,18 @@ def config_raw_full(config_raw_minimal: dict):
                     "description": "This is a custom category.",
                 }
             ],
-            "weighted_mean": {"enabled": False, "weighting": 0.25},
+            "weighted_mean": {
+                "enabled": False,
+                "weighting": 0.25,
+                "round": True,
+                "round_digits": 2,
+            },
             "submission_query": {"header": "CSG", "priority": 3000, "button": True},
+            "task_list_bars": {
+                "total_grade": {"enabled": True, "label": "Grade"},
+                "base_grade": {"enabled": True, "label": "Grade"},
+                "style_grade": {"enabled": True, "label": "Grade"},
+            },
         }
     )
     config_raw_minimal["enabled"].append("custom_category")
