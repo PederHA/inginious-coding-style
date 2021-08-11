@@ -97,6 +97,7 @@ the relevant task.
 - Add an "admin/tutor only" decorator that can be applied to methods that bars student users from calling them.
 - [ ] Ability to revert submission grades to their base grades if `weighted_mean` is disabled.
     - Would need to be a button that when clicked iterates through top submissions (`user_tasks` collection), then for each submission queries the `submissions` collection and fetches the grade stored in the submission with the corresponding `_id` and overwrites the grade in `user_tasks`.
+- [ ] Recalculate existing grades if weighting is changed.
 
 
 <!-- - [x] Complete -->
