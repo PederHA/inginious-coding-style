@@ -348,13 +348,13 @@ def submission_query_header(
     )
 
 
-def submission_query_data(
+def submission_query_cell(
     course: Course,
     submission: INGIniousSubmission,
     template_helper: TemplateHelper,
 ) -> str:
     return template_helper.render(
-        "submission_query_data.html",
+        "submission_query_cell.html",
         has_grades=has_coding_style_grades(submission),
         submission=submission,
         template_folder=TEMPLATES_PATH,
@@ -445,8 +445,8 @@ def init(
 
     # Add column to submission query table
     plugin_manager.add_hook(
-        "submission_query_data",
-        submission_query_data,
+        "submission_query_cell",
+        submission_query_cell,
         prio=config.submission_query.priority,
     )
 
