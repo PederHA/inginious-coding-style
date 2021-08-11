@@ -55,8 +55,29 @@ class WeightedMeanSettings(BaseModel):
     weighting: float = Field(ge=0.00, le=1.00, default=0.25)
     round: bool = True
     round_digits: int = Field(ge=0, default=2)
-    task_list_bar: bool = True
-    base_grade_label: str = "Correctness"
+
+
+class BaseBarSetting(BaseModel):
+    enabled: bool = True
+    label: str
+
+
+class TotalGradeBar(BaseBarSetting):
+    label: str = "Grade"
+
+
+class BaseGradeBar(BaseBarSetting):
+    label: str = "Correctness"
+
+
+class StyleGradeBar(BaseBarSetting):
+    label: str = "Coding Style"
+
+
+class TaskListBars(BaseModel):
+    total_grade: TotalGradeBar = Field(default_factory=TotalGradeBar)
+    base_grade: BaseGradeBar = Field(default_factory=BaseGradeBar)
+    style_grade: StyleGradeBar = Field(default_factory=StyleGradeBar)
 
 
 class PluginConfigIn(BaseModel):
@@ -79,8 +100,8 @@ class PluginConfigIn(BaseModel):
     # Weighted mean grades settings
     weighted_mean: WeightedMeanSettings = Field(default_factory=WeightedMeanSettings)
 
-    # Label text for style grade bar in the task list
-    style_grade_label: str = "Coding Style"
+    # Settings for bars displayed on the task list page
+    task_list_bars: TaskListBars = Field(default_factory=TaskListBars)
 
     # validators
     # Reusing validators: https://pydantic-docs.helpmanual.io/usage/validators/#reuse-validators
@@ -103,7 +124,7 @@ class PluginConfig(BaseModel):
     enabled: Dict[str, GradingCategory] = {}
     submission_query: SubmissionQuerySettings
     weighted_mean: WeightedMeanSettings
-    style_grade_label: str
+    task_list_bars: TaskListBars
 
     class Config:
         extras = "ignore"

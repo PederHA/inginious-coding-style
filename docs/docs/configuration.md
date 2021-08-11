@@ -44,16 +44,23 @@ plugins:
         description: Hvor godt kommentert koden er.
     submission_query:
         header: CSG
-        button: true
         priority: 3000
+        button: true
     weighted_mean:
         enabled: true
         weighting: 0.25
         round: true
         round_digits: 2
-        task_list_bar: true
-        base_grade_label: Correctness
-    style_grade_label: Coding Style
+    task_list_bars:
+        total_grade:
+            enabled: true
+            label: Grade
+        base_grade:
+            enabled: true
+            label: Correctness
+        style_grade:
+            enabled: true
+            label: Coding Style
 ```
 <!-- TODO: https://squidfunk.github.io/mkdocs-material/reference/data-tables/#configuration -->
 {% macro get_schema(prop, id="", required=none) -%}
@@ -71,7 +78,6 @@ plugins:
   {%- endif %}
 {% endfor -%}
 required: {% if required is not none -%} {{ id in required }} {% else -%} {{ False }} {%- endif %}
-
 ```
 {% endmacro %}
 
@@ -136,7 +142,7 @@ The header text for the plugin's column in the query results table.
 
 #### `button`
 
-Adds an additional button to each search result that links to the submission's coding style grading page.
+Adds an additional button to each search result row that links to the submission's coding style grading page.
 
 {{ get_schema(schema.definitions.SubmissionQuerySettings.properties.button) }}
 
@@ -200,29 +206,65 @@ Number of digits after decimal point to round to. Has no effect if `round` is di
 
 {{ get_schema(schema.definitions.WeightedMeanSettings.properties.round_digits) }}
 
-#### `task_list_bar`
+### `task_list_bars`
 
-Show separate progress bars for correctness and coding style grades in addition to the final weighted mean.
+Settings for the various bars displayed on the task list.
+
+#### `total_grade`
+
+The bar displaying the submission's final grade. This bar cannot be disabled, but its label can be.
+
+##### `enabled`
+
+Visibility of the total grade bar's label.
+
+{{ get_schema(schema.definitions.TotalGradeBar.properties.enabled) }}
+
+##### `label`
+
+Label for the total grade bar.
+
+{{ get_schema(schema.definitions.TotalGradeBar.properties.enabled) }}
+
+---
+
+#### `base_grade`
+
+The bar displaying the submission's base grade (the grade given by the automatic INGInious grader). This bar can be disabled in its entirety.
+
+##### `enabled`
+
+Visibility of the base grade bar. Has no effect if `weighted_mean` is disabled.
+
+{{ get_schema(schema.definitions.BaseGradeBar.properties.enabled) }}
+
+##### `label`
+
+Label for the total grade bar.
+
+{{ get_schema(schema.definitions.BaseGradeBar.properties.enabled) }}
+
+---
+
+#### `style_grade`
+
+The bar displaying the submission's mean coding style grade. This bar can be disabled in its entirety.
+
+##### `enabled`
+
+Visibility of the coding style grade bar.
+
+{{ get_schema(schema.definitions.StyleGradeBar.properties.enabled) }}
+
+##### `label`
+
+Label for the coding style grade bar.
+
+{{ get_schema(schema.definitions.StyleGradeBar.properties.enabled) }}
+
+---
 
 ![task_list_bar preview](img/configuration/01_task_list_bar.png)
-
-{{ get_schema(schema.definitions.WeightedMeanSettings.properties.task_list_bar) }}
-
-#### `base_grade_label`
-
-The label for the progress bar enabled by `task_list_bar`. Has no effect if `task_list_bar` is disabled.
-
-{{ get_schema(schema.definitions.WeightedMeanSettings.properties.base_grade_label) }}
-
----
-
-### `style_grade_label`
-
-The label for the style grade progress bar displayed for every task on a course's task list.
-
-{{ get_schema(schema.properties.style_grade_label) }}
-
----
 
 <!-- Only display this section if we have generated data/categories.-->
 {% if categories %}

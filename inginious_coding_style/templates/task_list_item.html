@@ -1,18 +1,23 @@
-<br>
-<hr>
-{% if config.weighted_mean.enabled and config.weighted_mean.task_list_bar -%}
+{% if config.task_list_bars.base_grade.enabled or config.task_list_bars.style_grade.enabled -%}
+    <br>
+    <hr>
+{% endif %}
+{% if config.weighted_mean.enabled and config.task_list_bars.base_grade.enabled -%}
     {%- set grade = submission.grade -%}
-    <label for="correct-grade">{{ config.weighted_mean.base_grade_label }}: </label>
-    <div class="progress" id="correct-grade">
+    <label for="base-grade">{{ config.task_list_bars.base_grade.label}}</label>
+    <div class="progress" id="base-grade">
         <div class="progress-bar bg-primary" aria-valuenow="{{ grade | int }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ grade | int }}%">
             {% if grade.is_integer() %}{{ grade | int }}{% else %}{{ grade }}{% endif %} %
         </div>
     </div>
     <br>
 {%- endif -%}
-<label for="style-grade">{{ config.style_grade_label }}: </label>
-<div class="progress" id="style-grade">
-    <div class="progress-bar bg-primary" aria-valuenow="{{ style_grade | int }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ style_grade | int }}%">
-        {% if style_grade.is_integer() %}{{ style_grade | int }}{% else %}{{ style_grade }}{% endif %} %
+
+{% if config.task_list_bars.style_grade.enabled -%}
+    <label for="style-grade">{{ config.task_list_bars.style_grade.label }}</label>
+    <div class="progress" id="style-grade">
+        <div class="progress-bar bg-primary" aria-valuenow="{{ style_grade | int }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ style_grade | int }}%">
+            {% if style_grade.is_integer() %}{{ style_grade | int }}{% else %}{{ style_grade }}{% endif %} %
+        </div>
     </div>
-</div>
+{% endif %}

@@ -397,6 +397,19 @@ def task_list_item(
     )
 
 
+def task_list_bar_label(
+    course: Course,
+    task: Task,
+    template_helper: TemplateHelper,
+) -> str:
+    """Modifies the label for the default INGInious grade progress bar."""
+    return template_helper.render(
+        "task_list_bar_label.html",
+        label=PLUGIN_CONFIG.task_list_bars.total_grade.label,
+        template_folder=TEMPLATES_PATH,
+    )
+
+
 def task_menu(course: Course, task: Task, template_helper: TemplateHelper) -> str:
     best_submission = get_best_submission(task)
     # Render blank if no submission or no coding style grades are found
@@ -427,6 +440,10 @@ def init(
     global PLUGIN_CONFIG
     PLUGIN_CONFIG = config
 
+    # Add label to default INGInious grade progress bars
+    if config.task_list_bars.total_grade.enabled:
+        plugin_manager.add_hook("task_list_bar_label", task_list_bar_label)
+
     # Display coding style grades in list of tasks for a course
     plugin_manager.add_hook("task_list_item", task_list_item)
 
@@ -450,8 +467,8 @@ def init(
         prio=config.submission_query.priority,
     )
 
+    # Add button to submission query table row
     if config.submission_query.button:
-        # Add button to submission query table row
         plugin_manager.add_hook(
             "submission_query_button",
             submission_query_button,
@@ -463,12 +480,6 @@ def init(
         "/admin/codingstyle/submission/<submissionid>",
         CodingStyleGrading.as_view("codingstyleadmin", config),
     )
-
-    # # User grade overview for a specific course  (NYI)
-    # plugin_manager.add_page(
-    #     "/course/<courseid>/codingstyle",
-    #     CodingStyleGradesOverview.as_view("codingstyleoverview"),
-    # )
 
     # Coding Style Grade view for a specific user submission
     plugin_manager.add_page(

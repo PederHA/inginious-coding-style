@@ -54,16 +54,23 @@ plugins:
         description: Hvor godt kommentert koden er.
     submission_query:
         header: CSG
-        button: true
         priority: 3000
+        button: true
     weighted_mean:
         enabled: true
         weighting: 0.25
         round: true
         round_digits: 2
-        task_list_bar: true
-        base_grade_label: Correctness
-    style_grade_label: Coding Style
+    task_list_bars:
+        total_grade:
+            enabled: true
+            label: Grade
+        base_grade:
+            enabled: true
+            label: Correctness
+        style_grade:
+            enabled: true
+            label: Coding Style
 ```
 
 <!-- ## Known Issues -->
@@ -88,6 +95,9 @@ the relevant task.
 
 - [ ] Better exception handling for Pydantic `ValidationError`. If something fails to validate, we should be able to display human-readable messages both in the web interface and in the logs.
 - Add an "admin/tutor only" decorator that can be applied to methods that bars student users from calling them.
+- [ ] Ability to revert submission grades to their base grades if `weighted_mean` is disabled.
+    - Would need to be a button that when clicked iterates through top submissions (`user_tasks` collection), then for each submission queries the `submissions` collection and fetches the grade stored in the submission with the corresponding `_id` and overwrites the grade in `user_tasks`.
+
 
 <!-- - [x] Complete -->
 <!-- - [ ] Incomplete -->
