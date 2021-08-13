@@ -75,34 +75,6 @@ plugins:
 
 <!-- ## Known Issues -->
 
-## TODO
-
-### User Features
-
-- [ ] Make each coding style grade progress bar on `/course/<courseid>` a clickable element that links to the relevant coding style grades page (`/submission/<submissionid>/codingstyle`) for
-the relevant task.
-
-### Admin/Tutor Features
-
-- [ ] Add `graded_by: List[str]` attribute to `CodingStyleGrades` to record which admin/tutor graded the submission's coding style.
-
-### Plugin Configuration
-
-- [ ] Add ability to enable/disable grading categories on a per-course basis.
-- [ ] Add ability to enable/disable plugin on a per course-basis.
-
-### Robustness
-
-- [ ] Better exception handling for Pydantic `ValidationError`. If something fails to validate, we should be able to display human-readable messages both in the web interface and in the logs.
-- Add an "admin/tutor only" decorator that can be applied to methods that bars student users from calling them.
-- [ ] Ability to revert submission grades to their base grades if `weighted_mean` is disabled.
-    - Would need to be a button that when clicked iterates through top submissions (`user_tasks` collection), then for each submission queries the `submissions` collection and fetches the grade stored in the submission with the corresponding `_id` and overwrites the grade in `user_tasks`.
-- [ ] Recalculate existing grades if weighting is changed.
-
-
-<!-- - [x] Complete -->
-<!-- - [ ] Incomplete -->
-
 ## Developer Notes
 
 This plugin uses [htmx](https://htmx.org/) to provide some interactivity.
