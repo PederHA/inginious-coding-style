@@ -1,5 +1,6 @@
 from logging import Logger
 from typing import List, Tuple
+from dataclasses import dataclass
 
 from bson.errors import InvalidId
 from inginious.frontend.course_factory import CourseFactory
@@ -9,8 +10,16 @@ from inginious.frontend.tasks import Task
 from inginious.frontend.user_manager import UserManager
 from werkzeug.exceptions import Forbidden, InternalServerError, NotFound
 
-from ._types import INGIniousSubmission
 from .submission import Submission, get_submission
+
+
+@dataclass
+class SubmissionMetadata:
+    """Contains human-readable submission metadata."""
+
+    authors: List[str]
+    graded_by: List[str]
+    submitted_on: str
 
 
 class BaseMixin:
@@ -44,17 +53,33 @@ class SubmissionMixin(BaseMixin):
         task = self._fetch_task(submission, course)
         return course, task, submission
 
-    def get_submission_authors_realname(self, submission: Submission) -> List[str]:
-        """Retrieves a list of the real names of a submission's authors."""
+    def get_user_realnames(self, usernames: List[str]) -> List[str]:
+        """Retrieves a list of the real names from a list of INGInious usernames."""
         names = []
-        for username in submission.username:
+        for username in usernames:
             realname = self.user_manager.get_user_realname(username)
             if realname is not None:
                 names.append(realname)
             else:
                 names.append(username)
                 self._logger.debug(f"Unknown user: {username}")
-        return names or ["Unknown"]  # fall back name
+        return names
+
+    def get_submission_authors_realname(
+        self, submission: Submission, default: str = "Unknown"
+    ) -> List[str]:
+        """Wrapper around get_user_realnames() that falls back on a default username if
+        submission has no authors associated with it."""
+        return self.get_user_realnames(submission.username) or [default]
+
+    def get_submission_metadata(self, submission: Submission) -> SubmissionMetadata:
+        """Creates a datastructure containing submission metadata formatted
+        to be human-readable."""
+        return SubmissionMetadata(
+            authors=self.get_submission_authors_realname(submission),
+            graded_by=self.get_user_realnames(submission.custom.graded_by),
+            submitted_on=submission.get_timestamp(),
+        )
 
     def _fetch_submission(self, submissionid: str, user_check: bool) -> Submission:
         """Slimmed down version of SubmissionPage.fetch_submission.
