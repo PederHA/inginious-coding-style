@@ -50,14 +50,12 @@ class StudentSubmissionCodingStyle(INGIniousAuthPage, SubmissionMixin):
         if not submission.custom.coding_style_grades:
             raise NotFound("Submission has no coding style grades.")
 
-        names = self.get_submission_authors_realname(submission)
-        submitted_on = submission.get_timestamp()
+        metadata = self.get_submission_metadata(submission)
 
         return self.template_helper.render(
             "stylegrade.html",
             template_folder=TEMPLATES_PATH,
-            submission_authors=names,
-            submitted_on=submitted_on,
+            metadata=metadata,
             user_manager=self.user_manager,
             course=course,
             task=task,
@@ -91,8 +89,7 @@ class CodingStyleGrading(SubmissionPage, SubmissionMixin, AdminPageMixin):
             # if submission was graded prior to any new categories being enabled
             grades = add_config_categories(grades, self.config)
 
-        authors = self.get_submission_authors_realname(submission)
-        submitted_on = submission.get_timestamp()
+        metadata = self.get_submission_metadata(submission)
 
         # Check if page is displayed after updating submission grades
         # Display alert denoting success of update:
@@ -103,8 +100,7 @@ class CodingStyleGrading(SubmissionPage, SubmissionMixin, AdminPageMixin):
             "grade_submission.html",
             template_folder=TEMPLATES_PATH,
             user_manager=self.user_manager,
-            submitted_on=submitted_on,
-            authors=authors,
+            metadata=metadata,
             course=course,
             task=task,
             submission=submission,
@@ -281,6 +277,16 @@ class CodingStyleGrading(SubmissionPage, SubmissionMixin, AdminPageMixin):
         # If validation fails, ValidationError is raised
         submission.custom.coding_style_grades = get_grades(grades)
 
+        # Add session username to submission's list of tutors who have graded it
+        username = self.user_manager.session_username()
+        if not username:
+            self._logger.warning(
+                f"Unable to get session username when grading submission {submission._id}. "
+                f"SessionID: {self.user_manager.session_id}"
+            )
+        elif username and username not in submission.custom.graded_by:
+            submission.custom.graded_by.append(username)
+
         self.update_submission(submission)
 
     def update_submission(self, submission: Submission) -> None:
@@ -317,7 +323,14 @@ class CodingStyleGrading(SubmissionPage, SubmissionMixin, AdminPageMixin):
         weighted_mean = submission.get_weighted_mean(self.config)
         # Update the 'user_tasks' collection (where top submissions are stored)
         self.database.user_tasks.find_one_and_update(
-            {"submissionid": submission._id}, {"$set": {"grade": weighted_mean}}
+            {"submissionid": submission._id},
+            {
+                "$set": {
+                    "grade": weighted_mean,
+                    # "grade_style": weighted_mean,
+                    # "grade_base": submission.grade,
+                }
+            },
         )
 
 

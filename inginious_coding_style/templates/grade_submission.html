@@ -11,7 +11,7 @@
 <table class="table table-sm">
     <tr>
         <td>Submission author(s)</td>
-        <td>{% for author in authors %}
+        <td>{% for author in metadata.authors %}
             <p>{{ author }}</p>
             {% endfor %}
         </td>
@@ -22,8 +22,14 @@
     </tr>
     <tr>
         <td>Submitted</td>
-        <td>{{ submitted_on }}</td>
+        <td>{{ metadata.submitted_on }}</td>
     </tr>
+    {% if metadata.graded_by %}
+    <tr>
+        <td>Graded by</td>
+        <td>{{ metadata.graded_by|join(", ") }}</td>
+    </tr>
+    {% endif %}
     {% if submission.custom.coding_style_grades %}
     <tr>
         <td>Mean style grade</td>

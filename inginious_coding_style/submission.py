@@ -16,6 +16,7 @@ class Custom(BaseModel):
     """Represents the contents of an INGInious submission's `"custom"` key."""
 
     coding_style_grades: CodingStyleGrades = Field(default_factory=CodingStyleGrades)
+    graded_by: List[str] = []
 
     class Config:
         # We don't care about other custom entries but we can't discard them
