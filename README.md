@@ -67,7 +67,7 @@ plugins:
             label: Grade
         base_grade:
             enabled: true
-            label: Correctness
+            label: Completion
         style_grade:
             enabled: true
             label: Coding Style

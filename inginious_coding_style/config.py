@@ -67,7 +67,7 @@ class TotalGradeBar(BaseBarSetting):
 
 
 class BaseGradeBar(BaseBarSetting):
-    label: str = "Correctness"
+    label: str = "Completion"
 
 
 class StyleGradeBar(BaseBarSetting):
