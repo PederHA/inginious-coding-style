@@ -12,5 +12,5 @@ jobs:
         with:
           python-version: 3.8
       - run: pip install mkdocs-material markdown-include mkdocs-markdownextradata-plugin inginious pydantic
-      - run: cd docs/scripts && python generate_categories.py && python generate_config_schema.py
+      - run: cd docs/scripts && /bin/bash run.sh
       - run: cd docs && mkdocs gh-deploy --force
