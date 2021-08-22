@@ -10,7 +10,6 @@ from inginious.frontend.pages.utils import INGIniousAuthPage
 from inginious.frontend.plugin_manager import PluginManager
 from inginious.frontend.tasks import Task
 from inginious.frontend.template_helper import TemplateHelper
-from werkzeug.datastructures import ImmutableMultiDict
 from werkzeug.exceptions import BadRequest, NotFound
 from werkzeug.wrappers.response import Response
 
@@ -21,7 +20,8 @@ from .grades import add_config_categories, get_grades
 from .logger import get_logger
 from .mixins import AdminPageMixin, SubmissionMixin
 from .submission import Submission
-from .utils import get_best_submission, has_coding_style_grades
+from .utils import (get_best_submission, has_coding_style_grades,
+                    parse_form_data)
 
 __version__ = "1.4.0"
 
@@ -112,7 +112,7 @@ class CodingStyleGrading(SubmissionPage, SubmissionMixin, AdminPageMixin):
     def POST_AUTH(self, submissionid: str) -> Response:
         """Adds or updates the coding style grades of a submission."""
         # Parse grades from grading form
-        grades = self.parse_form_data(request.form)
+        grades = parse_form_data(request.form)
         course, task, submission = self.get_submission(submissionid)
         self.do_check_course_privileges(course)
 
@@ -187,42 +187,6 @@ class CodingStyleGrading(SubmissionPage, SubmissionMixin, AdminPageMixin):
         """
         submission.custom.coding_style_grades.remove_category(category)
         self.update_submission(submission)
-
-    def parse_form_data(self, form_data: ImmutableMultiDict) -> GradesIn:
-        """Transforms flat form data into nested data that can be parsed
-        by `CodingStyleGrades.parse_obj()`
-
-        ### Example:
-
-        >>> form_data.to_dict()
-        {
-            "comments_grade": "100",
-            "comments_feedback": "Very good!"
-            "modularity_grade": "50",
-            "modularity_feedback": "Needs more functions!"
-        }
-        >>> parse_form_data(form_data)
-        {
-            "comments": {
-                "grade": "100",
-                "feedback": "Very good!",
-            },
-            "modularity": {
-                "grade": "50",
-                "feedback": "Needs more functions!",
-            }
-        }
-        """
-        form = form_data.to_dict()  # type: Dict[str, str]
-
-        out: GradesIn = {}
-        for (k, v) in form.items():
-            category, attr = k.split("_")
-            try:
-                out[category][attr] = v
-            except KeyError:
-                out[category] = {attr: v}
-        return out
 
     def update_submission_grades(
         self, submission: Submission, grades_data: GradesIn

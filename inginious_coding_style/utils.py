@@ -1,8 +1,9 @@
-from typing import Optional
+from typing import Dict, Optional
 
 from inginious.frontend.tasks import Task
+from werkzeug.datastructures import ImmutableMultiDict
 
-from ._types import INGIniousSubmission
+from ._types import GradesIn, INGIniousSubmission
 from .submission import Submission, get_submission
 
 
@@ -38,3 +39,40 @@ def has_coding_style_grades(submission: INGIniousSubmission) -> bool:
         return bool(submission["custom"]["coding_style_grades"])
     except:
         return False
+
+
+def parse_form_data(form_data: ImmutableMultiDict) -> GradesIn:
+    """Transforms flat form data into nested data that can be parsed
+    by `CodingStyleGrades.parse_obj()`
+
+    ### Example:
+
+    >>> form_data.to_dict()
+    {
+        "comments_grade": "100",
+        "comments_feedback": "Very good!"
+        "modularity_grade": "50",
+        "modularity_feedback": "Needs more functions!"
+    }
+    >>> parse_form_data(form_data)
+    {
+        "comments": {
+            "grade": "100",
+            "feedback": "Very good!",
+        },
+        "modularity": {
+            "grade": "50",
+            "feedback": "Needs more functions!",
+        }
+    }
+    """
+    form = form_data.to_dict()  # type: Dict[str, str]
+
+    out: GradesIn = {}
+    for (k, v) in form.items():
+        category, attr = k.split("_")
+        try:
+            out[category][attr] = v
+        except KeyError:
+            out[category] = {attr: v}
+    return out
