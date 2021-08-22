@@ -67,7 +67,7 @@ class TotalGradeBar(BaseBarSetting):
 
 
 class BaseGradeBar(BaseBarSetting):
-    label: str = "Correctness"
+    label: str = "Completion"
 
 
 class StyleGradeBar(BaseBarSetting):
@@ -103,6 +103,9 @@ class PluginConfigIn(BaseModel):
     # Settings for bars displayed on the task list page
     task_list_bars: TaskListBars = Field(default_factory=TaskListBars)
 
+    # Show/hide "graded by" on student coding style grades page.
+    show_graders: bool = False
+
     # validators
     # Reusing validators: https://pydantic-docs.helpmanual.io/usage/validators/#reuse-validators
     # "*" validator: https://pydantic-docs.helpmanual.io/usage/validators/#pre-and-per-item-validators
@@ -125,6 +128,7 @@ class PluginConfig(BaseModel):
     submission_query: SubmissionQuerySettings
     weighted_mean: WeightedMeanSettings
     task_list_bars: TaskListBars
+    show_graders: bool
 
     class Config:
         extras = "ignore"

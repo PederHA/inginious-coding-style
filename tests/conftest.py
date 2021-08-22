@@ -4,8 +4,19 @@ from unittest.mock import Mock
 
 import pytest
 from bson import ObjectId
+from flask import Flask
+from inginious.client.client import Client
+from inginious.frontend.course_factory import CourseFactory
 from inginious.frontend.courses import Course
+from inginious.frontend.pages.utils import INGIniousPage
+from inginious.frontend.plugin_manager import PluginManager
+from inginious.frontend.submission_manager import WebAppSubmissionManager
+from inginious.frontend.task_factory import TaskFactory
 from inginious.frontend.tasks import Task
+from inginious.frontend.template_helper import TemplateHelper
+from inginious.frontend.user_manager import UserManager
+from pymongo.database import Database
+
 from inginious_coding_style.config import get_config
 from inginious_coding_style.grades import get_grades
 from inginious_coding_style.submission import get_submission
@@ -153,3 +164,82 @@ def config_raw_full(config_raw_minimal: dict):
 @pytest.fixture
 def config_pydantic_full(config_raw_full):
     yield get_config(config_raw_full)
+
+
+@pytest.fixture(scope="session")
+def get_homepath():
+    yield lambda a: "/"
+
+
+@pytest.fixture(scope="session")
+def flask_app(get_homepath):
+    app = Flask(__name__)
+    app.get_homepath = get_homepath
+    yield app
+
+
+@pytest.fixture(scope="session")
+def mock_database():
+    yield Mock(spec=Database)
+
+
+@pytest.fixture(scope="session")
+def mock_client():
+    yield Mock(spec=Client)
+
+
+@pytest.fixture(scope="session")
+def mock_course_factory():
+    yield Mock(spec=CourseFactory)
+
+
+@pytest.fixture(scope="session")
+def mock_task_factory():
+    yield Mock(spec=TaskFactory)
+
+
+@pytest.fixture(scope="session")
+def mock_user_manager():
+    yield Mock(spec=UserManager)
+
+
+@pytest.fixture(scope="session")
+def mock_submission_manager():
+    yield Mock(spec=WebAppSubmissionManager)
+
+
+@pytest.fixture(scope="session")
+def plugin_manager(
+    mock_client: Client,
+    flask_app: Flask,
+    mock_course_factory: CourseFactory,
+    mock_task_factory: TaskFactory,
+    mock_database: Database,
+    mock_user_manager: UserManager,
+    mock_submission_manager: WebAppSubmissionManager,
+):
+    p = PluginManager()
+    p.load(
+        mock_client,
+        flask_app,
+        mock_course_factory,
+        mock_task_factory,
+        mock_database,
+        mock_user_manager,
+        mock_submission_manager,
+        [],
+    )
+    yield p
+
+
+@pytest.fixture(scope="session")
+def template_helper(plugin_manager, mock_user_manager, get_homepath):
+    t = TemplateHelper(plugin_manager, mock_user_manager)
+    t.add_to_template_globals("get_homepath", get_homepath)
+    t.add_to_template_globals("_", lambda a: "i18n")
+    yield t
+
+
+@pytest.fixture
+def mock_inginious_page():
+    yield Mock(spec=INGIniousPage)

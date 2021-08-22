@@ -57,10 +57,11 @@ plugins:
             label: Grade
         base_grade:
             enabled: true
-            label: Correctness
+            label: Completion
         style_grade:
             enabled: true
             label: Coding Style
+    show_graders: false
 ```
 <!-- TODO: https://squidfunk.github.io/mkdocs-material/reference/data-tables/#configuration -->
 {% macro get_schema(prop, id="", required=none) -%}
@@ -265,6 +266,14 @@ Label for the coding style grade bar.
 ---
 
 ![task_list_bar preview](img/configuration/01_task_list_bar.png)
+
+---
+
+### `show_graders`
+
+Display a list of tutors/admins who have graded the submission in the sidebar of a student submissions coding style grade page (`/submissions/<submissionid>/codingstyle`).
+
+{{ get_schema(schema.properties.show_graders) }}
 
 <!-- Only display this section if we have generated data/categories.-->
 {% if categories %}

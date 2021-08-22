@@ -1,8 +1,23 @@
 # Changelog
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+All notable changes to this project will be documented in this file.
 
-## 1.4.0 (Aug 11th, 2021)
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+## [1.5.0] 2021-08-XX
+
+### Added
+
+- `graded_by` attribute for submissions which keeps track of which tutors/admins have graded a submission. This change is reflected on the front-end as well.
+- Option to show/hide the `graded_by` info in the sidebar of student coding style grades overview (`/submissions/<submissionid>/codingstyle`).
+
+### Changed
+
+- All references to "correctness" have been replaced by "completion".
+
+## [1.4.0] - 2021-08-11
 
 ### Added
 
@@ -10,7 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Rounding of weighted mean grade.
 - Customizable task list progress bars.
 
-## 1.3.0 (Aug 9th, 2021)
+## [1.3.0] - 2021-08-09
 
 ### Added
 
@@ -25,7 +40,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - Refactored submission, course and task retrieval for `INGIniousPage` subclasses. They now share a common interface for retrieving these.
 
-## 1.2.0 (Aug 8th, 2021)
+## [1.2.0] - 2021-08-08
 
 ### Added
 
@@ -35,7 +50,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
     - `submission_query` config section.
 - Weighted mean grade calculation.
     - Based on the previous `merge_grades` functionality, but now lets administrators define a custom weight for coding style grades used to find the weighted mean.
-    - Option to show separate bars for automated correctness grade given by INGInious and coding style grade ([`task_list_bar`](https://pederha.github.io/inginious-coding-style/configuration/#task_list_bar)).
+    - Option to show separate bars for automated completion grade given by INGInious and coding style grade ([`task_list_bar`](https://pederha.github.io/inginious-coding-style/configuration/#task_list_bar)).
 
 ### Changed
 
@@ -45,7 +60,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - `experimental` section in config.
 
-## 1.1.1 (Aug 3rd, 2021)
+## [1.1.1] - 2021-08-03
 
 ### Fixed
 
@@ -53,7 +68,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - Student grades page navbar breadcrumb.
 
-## 1.1.0 (Aug 3rd, 2021)
+## [1.1.0] - 2021-08-03
 
 ### Added
 
@@ -65,7 +80,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - Submissions are now validated with Pydantic. This makes it easier to reason with the code, as there is now a distinction between a raw submission returned by the INGInious `SubmissionManager` and a submission that has been parsed by the plugin and been assigned a `CodingStyleGrades` object.
 
-## 1.0.2 (Aug 1st, 2021)
+## [1.0.2] 2021-08-01
 
 ### Added
 - Mean grade to sidebar of grades page (admin+student).
@@ -79,7 +94,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Incorrect rendering of grades page (admin+student) when an odd number of grading categories are enabled.
 - Removing a disabled category from submission on grades page (admin) always raising a `TypeError` exception.
 
-## 1.0.1 (July 29th, 2021)
+## [1.0.1] 2021-07-29
 
 ### Added
 - README to PyPi build.
@@ -87,6 +102,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Fixed
 - Include up-to-date version of `pyproject.toml`.
 
-## 1.0.0 (July 29th, 2021)
+## [1.0.0] 2021-07-29
 
 Initial release.

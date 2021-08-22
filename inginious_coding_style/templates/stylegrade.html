@@ -19,7 +19,7 @@
         <td>Submitted</td>
         <td>{{ metadata.submitted_on }}</td>
     </tr>
-    {% if metadata.graded_by %}
+    {% if metadata.graded_by and config.show_graders %}
     <tr>
         <td>Graded by</td>
         <td>{{ metadata.graded_by|join(", ") }}</td>
