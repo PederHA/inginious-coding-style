@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from typing import Dict, Optional, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, Optional, Union
 
 from pydantic import BaseModel, Field, validator
+from pydantic.fields import ModelField
 
 from ._types import GradesIn
 
@@ -14,17 +15,23 @@ class GradingCategory(BaseModel):
     """Represents a grading category."""
 
     id: str  # Key data is stored under
-    name: str
+    name: str = ""
     description: str
     grade: int = Field(default=100, ge=0, le=100)
     feedback: str = Field(default="", max_length=5000)  # prevent unbounded text input
 
     @validator("name", pre=True)
-    def handle_missing_name(cls, value: Optional[str], values: Dict[str, str]) -> str:
-        """Defaults name to `GradingCategory.id.title()` if its value is None."""
-        if value is None:
+    def handle_name_none(cls, name: Optional[str], field: ModelField) -> str:
+        if name is None:
+            return field.default
+        return name
+
+    @validator("name")
+    def handle_missing_name(cls, name: Optional[str], values: Dict[str, str]) -> str:
+        """Defaults name to `GradingCategory.id.title()` if omitted."""
+        if not name:
             return values["id"].title()
-        return value
+        return name
 
 
 class CodingStyleGrades(BaseModel):
