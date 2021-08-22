@@ -410,17 +410,9 @@ def task_list_item(
     )
 
 
-def task_list_bar_label(
-    course: Course,
-    task: Task,
-    template_helper: TemplateHelper,
-) -> str:
+def task_list_bar_label(course: Course, template_helper: TemplateHelper) -> str:
     """Modifies the label for the default INGInious grade progress bar."""
-    return template_helper.render(
-        "task_list_bar_label.html",
-        label=PLUGIN_CONFIG.task_list_bars.total_grade.label,
-        template_folder=TEMPLATES_PATH,
-    )
+    return PLUGIN_CONFIG.task_list_bars.total_grade.label
 
 
 def task_menu(course: Course, task: Task, template_helper: TemplateHelper) -> str:
