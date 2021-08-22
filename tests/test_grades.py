@@ -1,7 +1,10 @@
-from inginious_coding_style.grades import GradingCategory, get_grades, CodingStyleGrades
-from hypothesis import given, strategies as st
 import pytest
+from hypothesis import given
+from hypothesis import strategies as st
 from pydantic import ValidationError
+
+from inginious_coding_style.grades import (CodingStyleGrades, GradingCategory,
+                                           get_grades)
 
 
 def test_get_grades(grades):
@@ -36,6 +39,12 @@ class TestFeedback:
 def test_remove_category(grades_pydantic: CodingStyleGrades):
     grades_pydantic.remove_category("comments")
     assert "commments" not in grades_pydantic.grades
+    category = grades_pydantic["idiomaticity"]
+    grades_pydantic.remove_category(category)
+    assert "idiomaticity" not in grades_pydantic.grades
+
+    with pytest.raises(TypeError):
+        assert grades_pydantic.remove_category(1)
 
 
 def test_delete_grades(grades_pydantic: CodingStyleGrades):
@@ -61,3 +70,26 @@ def test_add_category(grades_pydantic: CodingStyleGrades):
     assert grades_pydantic.grades["mycat"].feedback == ""
 
     assert len(grades_pydantic.grades) == len_pre + 1
+
+
+def test_missing_grading_category_name():
+    c = {
+        "id": "comments",
+        "name": None,
+        "description": "Appropriate use of comments.",
+    }
+    category = GradingCategory(**c)
+    assert category.name == c["id"].title()
+    assert category.name == "Comments"
+
+
+def test_grades_contains(grades_pydantic):
+    """Tests CodingStyleGrades.__contains__()"""
+    for id in ["comments", "modularity", "structure", "idiomaticity"]:
+        assert id in grades_pydantic
+
+    for grade in grades_pydantic.grades.values():
+        assert grade in grades_pydantic
+
+    # test invalid type
+    assert 2 not in grades_pydantic
