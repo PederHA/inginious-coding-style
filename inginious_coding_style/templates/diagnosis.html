@@ -1,0 +1,99 @@
+
+{% if diagnosis.ok %}
+<div id="status">
+    <div class="card text-white bg-success mb-3">
+        <div class="card-header">Success</div>
+        <div class="card-body">
+            <p class="card-text">No problematic submissions found.</p>
+        </div>
+    </div>
+</div>
+{% else %}
+<div id="status" class="row mb-3">
+    <table id="status-table" class="table">
+        <h3>Submission Status</h3>
+        <thead>
+            <tr>
+                <th scope="col">Inconsistent</th>
+                <th scope="col">Missing</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ diagnosis.inconsistent | length }}</td>
+                <td>{{ diagnosis.missing | length }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <ul>
+        <li>Inconsistent: Submission's active grade does not match active grading mode. (Base/Mean)</li>
+        <li>Missing: Submission is missing base and/or mean grades.</li>
+    </ul>
+</div>
+
+{% if diagnosis.inconsistent -%}
+    <table id="inconsistent-table" class="table mb-2">
+        <h3>Inconsistent submissions</h3>
+        <thead>
+            <tr>
+                <th scope="col">User Task ID</th>
+                <th scope="col">Submission ID</th>
+                <th scope="col">Active Grade</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if config.weighted_mean.enabled %}
+                {% set inconsistent_mode = "Base" %}
+            {% else %}
+                {% set inconsistent_mode = "Weighted Mean" %}
+            {% endif %}
+            {% for submission in diagnosis.inconsistent %}
+                <tr>
+                    <td>{{ submission._id }}</td>
+                    <td>{{ submission.submissionid}}</td>
+                    <td>{{ inconsistent_mode }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+
+{% if diagnosis.missing -%}
+    <table id="inconsistent-table" class="table mb-2">
+        <h3>Submissions Missing Grades</h3>
+        <thead>
+            <tr>
+                <th scope="col">User Task ID</th>
+                <th scope="col">Submission ID</th>
+                <th scope="col">Active Grade</th>
+                <th scope="col">Base Grade</th>
+                <th scope="col">Mean Grade</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% set present = '<i class="fa fa-check" aria-hidden="true"></i>' %}
+            {% set missing = '<i class="fa fa-times" aria-hidden="true"></i>' %}
+            {% set omitted = namespace(omitted=0) %}
+            {% for submission in diagnosis.missing %}
+                {% if loop.index < 10 %}
+                    <tr>
+                        <td>{{ submission._id }}</td>
+                        <td>{{ submission.submissionid }}</td>
+                        {# TODO: make a macro for determining icons #}
+                        <td>{% if submission.grade is not none %} {{ present | safe}} {% else  %} {{ missing | safe }} {% endif %}</td>
+                        <td>{% if submission.grade_base %} {{ present | safe}} {% else  %} {{ missing | safe }} {% endif %}</td>
+                        <td>{% if submission.grade_mean %} {{ present | safe}} {% else  %} {{ missing | safe }} {% endif %}</td>
+                    </tr>
+                {# Limit number of items displayed #}
+                {% elif loop.index == 10 %}
+                    {% set omitted.omitted = loop.length - loop.index %}
+                {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if omitted.omitted > 0 -%}
+        <small>{{ omitted.omitted }} items omitted.</small>
+    {% endif %}
+{% endif %}
+{% endif %}

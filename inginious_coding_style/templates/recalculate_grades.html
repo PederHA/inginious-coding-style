@@ -1,0 +1,35 @@
+{% if exc -%}
+    <div id="status">
+        <div class="card text-white bg-danger mb-3">
+            <div class="card-header">Failure</div>
+            <div class="card-body">
+                <p class="card-text">An unknown exception occured when attempting to recalculate weighted mean grades.</p>
+                <p class="card-text">{{ exc }}</p>
+            </div>
+        </div>
+    </div>
+{% elif failed -%}
+    <div id="status">
+        <div class="card text-white bg-warning mb-3">
+            <div class="card-header">Warning</div>
+            <div class="card-body">
+                <p class="card-text">Unable to recalculate mean grades of all submissions.</p>
+            </div>
+        </div>
+    </div>
+    <h6>The following submissions failed:</h6>
+    <ul>
+        {% for submission in failed %}
+        <li><a href="/submissions/{{submission.submissionid}}">{{ submission.submissionid }}</a></li>
+        {% endfor %}
+    </ul>
+{% else -%}
+    <div id="status">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-header">Success</div>
+            <div class="card-body">
+                <p class="card-text">Recalculated grades of all submissions.</p>
+            </div>
+        </div>
+    </div>
+{% endif %}
