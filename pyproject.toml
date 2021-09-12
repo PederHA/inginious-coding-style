@@ -17,6 +17,7 @@ classifiers = [
 python = "^3.8"
 inginious = "^0.7"
 pydantic = "^1.8.2"
+unidecode = "^1.2.0"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.910"
