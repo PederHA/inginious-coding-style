@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Union
 
 from bson.errors import InvalidId
 from inginious.frontend.courses import Course
@@ -29,7 +29,7 @@ class BaseMixin(INGIniousPage):
 class SubmissionMixin(BaseMixin):
     """This mixin class provides a common interface for working with
     submissions for _any_ class that inherits from
-    `inginious.frontend.pages.utils.INGIniousPage`
+    `inginious.frontend.pages.utils.INGIniousPage`.
 
     `inginious.frontend.pages.course_admin.SubmissionPage` is an
     admin-only page, and therefore classes that implement pages that should
@@ -98,6 +98,7 @@ class SubmissionMixin(BaseMixin):
         self,
         submission: Submission,
     ) -> Course:
+        """Retrieves a course for a given submission."""
         try:
             course = self.course_factory.get_course(submission.courseid)
         except Exception as e:
@@ -116,6 +117,7 @@ class SubmissionMixin(BaseMixin):
         return course
 
     def _fetch_task(self, submission: Submission, course: Course) -> Task:
+        """Retrieves a task for a given submission and course."""
         try:
             task = course.get_task(submission.taskid)
         except Exception as e:
@@ -133,7 +135,7 @@ class SubmissionMixin(BaseMixin):
             raise InternalServerError("Unable to display submission.")
         return task
 
-    def swap_all_user_tasks_active_grade(self, to_mean: bool) -> List[dict]:
+    def swap_active_grade(self, to_mean: bool) -> List[dict]:
         """Enables/disables weighted grades for all top submissions by
         modifying the `grade` key of each submission stored in the
         `user_tasks` collection.
@@ -141,14 +143,13 @@ class SubmissionMixin(BaseMixin):
         Parameters
         ----------
         to_mean : `bool`, optional
-            Set the submissions' active grade (the one displayed by INGInious)
-            to its weighted mean grade. Sets the active grade to the
-            submissions' INGInious base grade if False, by default True
+            Whether to swap grades to weighted mean grades or to
+            INGInious base grades.
 
         Returns
         -------
         `List[dict]`
-            Submissions that failed to be modified.
+            Submissions that could not be modified.
         """
         failed: List[dict] = []
         for user_task in self.database.user_tasks.find():  # type: Dict[str, Any]
@@ -211,9 +212,22 @@ class SubmissionMixin(BaseMixin):
         If the document does not have the keys `grade_base` and/or
         `grade_mean`, they are calculated and added to the document.
 
-        Raises `KeyError` if `user_task` has no grade, and the usual
-        exceptions raised by `_fetch_submission()` also apply. Callers of
-        this method should implement exception handling accordingly.
+        Parameters
+        ----------
+        user_task : Dict[str, Any]
+            A document from the `user_tasks` DB collection
+
+        Returns
+        -------
+        Dict[str, Any]
+            Modified `user_tasks` document.
+
+        Raises
+        ------
+        `KeyError`
+            Raised if `user_task` has no grade. The usual
+            exceptions raised by `_fetch_submission()` also apply. Callers of
+            this method should implement exception handling accordingly.
         """
 
         for key in ["grade", "submissionid"]:
@@ -320,14 +334,10 @@ class SubmissionMixin(BaseMixin):
         self.update_submission(submission)
 
     def update_submission(self, submission: Submission) -> None:
-        """Finds an existing submission and updates it with new data.
-
-        Returns updated submission, or None if submission was not found.
-        """
+        """Finds an existing submission and updates it with new data."""
         # TODO: Wrap these two operations in a transaction somehow?
         self.set_user_tasks_grades(submission)
-
-        self.database.submissions.find_one_and_update(
+        self.database.submissions.update_one(
             {"_id": submission._id},
             {"$set": submission.dict()},
         )
@@ -377,36 +387,26 @@ class SubmissionMixin(BaseMixin):
 
 
 class AdminPageMixin(BaseMixin):
-    """This one's a little questionable in design, but exists
-    to avoid having to retrieve a course twice just to check permissions."""
-
-    def has_course_privileges(self, course: Course, allow_staff: bool) -> bool:
-        if allow_staff:
-            return self.user_manager.has_staff_rights_on_course(course)
-        else:
-            return self.user_manager.has_admin_rights_on_course(course)
-
     def check_course_privileges(self, course: Course, allow_staff: bool = True) -> None:
         """Checks if a user has admin or staff privileges on a course.
-        Raises a 403 Forbidden exception if lacking rights."""
-        has_priv = self.has_course_privileges(course, allow_staff)
-        if has_priv:
-            return
+        Raises a `Forbidden` exception if lacking rights.
 
-        # NOTE: Lifted straight from INGIniousAdminPage.get_course_and_check_rights
+        Basically INGIniousAdminPage.get_course_and_check_rights() except
+        we already have the course, and just want to check privileges.
+        """
         if allow_staff:
-            if not self.user_manager.has_staff_rights_on_course(course):
-                raise Forbidden(
-                    description=_("You don't have staff rights on this course.")
-                )
+            func = self.user_manager.has_staff_rights_on_course
         else:
-            if not self.user_manager.has_admin_rights_on_course(course):
-                raise Forbidden(
-                    description=_("You don't have admin rights on this course.")
-                )
+            func = self.user_manager.has_admin_rights_on_course
+        has_priv = func(course)
+        if has_priv:
+            return  # we have privileges
 
-    def has_course_privileges_courseid(
-        self, courseid: str, allow_staff: bool = True
-    ) -> bool:
-        course = self.course_factory.get_course(courseid)
-        return self.check_course_privileges(course, allow_staff)
+        if allow_staff:
+            raise Forbidden(
+                description=_("You don't have staff rights on this course.")
+            )
+        else:
+            raise Forbidden(
+                description=_("You don't have admin rights on this course.")
+            )
