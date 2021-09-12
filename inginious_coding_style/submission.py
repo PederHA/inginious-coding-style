@@ -4,12 +4,12 @@ from typing import Any, List, Optional, OrderedDict, Union
 from bson import ObjectId
 from inginious.frontend.courses import Course
 from inginious.frontend.tasks import Task
-from pydantic import BaseModel, Field, validator, ValidationError
+from pydantic import BaseModel, Field, ValidationError, validator
 
 from ._types import GradesIn, INGIniousSubmission
+from .config import PluginConfig
 from .grades import CodingStyleGrades, get_grades
 from .logger import get_logger
-from .config import PluginConfig
 
 
 class Custom(BaseModel):
@@ -70,6 +70,10 @@ class Submission(BaseModel):
     class Config:
         arbitrary_types_allowed = True  # support ObjectId
         extra = "allow"  # we don't validate the other dict keys
+
+    @property
+    def coding_style_grades(self) -> CodingStyleGrades:
+        return self.custom.coding_style_grades
 
     @validator("custom", pre=True)
     def check_custom_key(cls, custom: Any) -> Union[dict, Custom]:
