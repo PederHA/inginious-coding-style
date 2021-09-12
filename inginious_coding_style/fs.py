@@ -2,7 +2,7 @@
 
 import shutil
 from pathlib import Path
-from typing import Iterator, Optional
+from typing import Optional
 
 from inginious.common.base import load_json_or_yaml, write_json_or_yaml
 
@@ -11,29 +11,54 @@ from .config import PluginConfig
 
 def get_config_path(filename: str = "configuration.yaml") -> Optional[Path]:
     """Attempts to find a config file given a filename."""
-    for path in _try_get_config(filename):
+    for d in [".", "/", "/var/www/INGInious", "/var/www"]:
+        path = Path(d) / filename
         if path.exists():
             return path
     return None
 
 
-def _try_get_config(filename: str) -> Iterator[Path]:
-    """Attempts to find a filename in common INGInious directories."""
-    dirs = [".", "/", "/var/www/INGInious", "/var/www"]
-    for d in dirs:
-        yield Path(d) / filename
+def update_config_file(plugin_config: PluginConfig, config_path: Path) -> None:
+    """Updates the INGInious configuration with new config values.
 
+    Parameters
+    ----------
+    config_path : Path
+        Path to INGInious configuration file
+    plugin_config : PluginConfig
+        The updated configuration
 
-def update_config_file(config_path: Path, plugin_config: PluginConfig) -> None:
+    Raises
+    ------
+    `Exception`
+        Raised if plugin configuration block cannot be found in `config["plugins"]`
+    """
     p = str(config_path.absolute())
     config = load_json_or_yaml(p)
     try:
-        for plugin in config["plugins"]:
-            if plugin["plugin_module"] == "inginious_coding_style":
-                plugin = plugin_config.dict()  # overwrite in-place
-                break
-    except KeyError as e:
-        raise  # TODO: add proper exception handling
+        plugin = next(
+            c
+            for c in config["plugins"]
+            if c["plugin_module"] == "inginious_coding_style"
+        )
+        plugin_idx = config["plugins"].index(plugin)
+    except (StopIteration, ValueError) as e:
+        raise Exception(
+            f"Unable to find Coding Style plugin configuration in {config_path}."
+        )
+
+    # Add new and updated categories
+    # TODO: refactor. This is a mess that is waiting to create technical debt.
+    plugin["categories"] = [
+        category.dict(include={"id", "name", "description"})
+        for category in plugin_config.enabled.values()
+    ]
+    plugin["enabled"] = [c["id"] for c in plugin["categories"]]
+
+    plugin["weighted_mean"]["weighting"] = plugin_config.weighted_mean.weighting
+    plugin["weighted_mean"]["enabled"] = plugin_config.weighted_mean.enabled
+
+    config["plugins"][plugin_idx] = plugin
 
     # Create backup of config before overwriting
     shutil.copy(p, f"{p}.bak")
