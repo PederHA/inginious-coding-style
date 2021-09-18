@@ -1,8 +1,10 @@
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, validator, Field
+
+from pydantic import BaseModel, Field, validator
 from pydantic.fields import ModelField
+
+from .grades import DEFAULT_CATEGORIES, GradingCategory
 from .logger import get_logger
-from .grades import GradingCategory, DEFAULT_CATEGORIES
 
 
 def none_returns_defaults(value: Any, field: ModelField) -> Any:
@@ -34,7 +36,8 @@ def none_returns_defaults(value: Any, field: ModelField) -> Any:
 
     In this case, the value of `enabled` is interpreted as `None` by
     the INGInious YAML parser. When that happens, this function serves
-    as a failsafe, so that the field's defaults kick in.
+    as a failsafe, so that the field's defaults kick in instead of leading
+    to a validation error because of an unexpected None value.
     """
     if value is None:
         if field.default is not None:
@@ -57,20 +60,20 @@ class WeightedMeanSettings(BaseModel):
     round_digits: int = Field(ge=0, default=2)
 
 
-class BaseBarSetting(BaseModel):
+class BarBase(BaseModel):
     enabled: bool = True
     label: str
 
 
-class TotalGradeBar(BaseBarSetting):
+class TotalGradeBar(BarBase):
     label: str = "Grade"
 
 
-class BaseGradeBar(BaseBarSetting):
+class BaseGradeBar(BarBase):
     label: str = "Completion"
 
 
-class StyleGradeBar(BaseBarSetting):
+class StyleGradeBar(BarBase):
     label: str = "Coding Style"
 
 

@@ -19,8 +19,10 @@
         ></textarea>
     </div>
     <div class="col-sm-2">
+        {# we use removeElementById defined in plugin_settings.html #}
         <button
-            onclick='document.getElementById("category_{{id_n}}").remove();'
+            type="button"
+            onclick='removeElementById("category_{{id_n}}", null, false)'
             style="border:none; background: none;"
         >
             <i class="fa fa-window-close" style="color:lightcoral;"></i>

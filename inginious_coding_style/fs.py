@@ -57,6 +57,9 @@ def update_config_file(plugin_config: PluginConfig, config_path: Path) -> None:
 
     plugin["weighted_mean"]["weighting"] = plugin_config.weighted_mean.weighting
     plugin["weighted_mean"]["enabled"] = plugin_config.weighted_mean.enabled
+    plugin["task_list_bars"] = plugin_config.task_list_bars.dict()
+    plugin["show_graders"] = plugin_config.show_graders
+    plugin["submission_query"] = plugin_config.submission_query.dict()
 
     config["plugins"][plugin_idx] = plugin
 
