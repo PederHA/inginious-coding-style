@@ -1,0 +1,31 @@
+<div id="category_{{id_n}}" class="form-group row">
+    <div class="col-sm-2 control-label">
+        <input
+            type="text"
+            id="new_category_name_{{id_n}}"
+            name="new_category_name_{{id_n}}"
+            minlength="1"
+            maxlength="64"
+            size="10"
+            required="required"
+        ></div>
+    <div class="col-sm-8">
+        <textarea
+            name="new_category_description_{{id_n}}"
+            id="new_category_description_{{id_n}}"
+            form="codingstyle_settings_form"
+            class="form-control"
+            required="required"
+        ></textarea>
+    </div>
+    <div class="col-sm-2">
+        {# we use removeElementById defined in plugin_settings.html #}
+        <button
+            type="button"
+            onclick='removeElementById("category_{{id_n}}", null, false)'
+            style="border:none; background: none;"
+        >
+            <i class="fa fa-window-close" style="color:lightcoral;"></i>
+        </button>
+    </div>
+</div>

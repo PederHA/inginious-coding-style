@@ -1,0 +1,351 @@
+{% extends "layout.html" %}
+
+{% block head %}
+{{ super() }}
+{# Add htmx #}
+<script src="https://unpkg.com/htmx.org@1.5.0"></script>
+<script src="https://unpkg.com/hyperscript.org@0.8.1"></script>
+{% endblock %}
+
+
+{% block title %} {{ course.get_name(user_manager.session_language()) }} - {{ _("Settings") }} {% endblock %}
+
+{% block column %}
+    {{ template_helper.call('course_admin_menu', course=course, current='settings/codingstyle') | safe }}
+{% endblock %}
+
+{% block navbar %}
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{get_homepath()}}/course/{{course.get_id()}}">{{ course.get_name(user_manager.session_language()) }}</a></li>
+            <li class="breadcrumb-item"><a href="{{get_homepath()}}/admin/{{course.get_id()}}" title="{{ _('Administration') }}" data-toggle="tooltip" data-placement="bottom">
+                <i class="fa fa-user-secret"></i></a></li>
+            <li class="breadcrumb-item active"><a href="#"><i class="fa fa-cog"></i> Coding Style Settings <span class="sr-only">{{ _("(current)") }}</span></a></li>
+        </ol>
+    </nav>
+{% endblock %}
+
+{% block content %}
+
+<div class="row mb-2">
+    <div class="col">
+        <h2>Coding Style Plugin Settings</h2>
+    </div>
+</div>
+
+<form id="codingstyle_settings_form" action="{{get_homepath()}}/admin/{{course.get_id()}}/settings/codingstyle" method="post">
+    <!-- Insert HTMX response here -->
+    <div id="save-result">
+    </div>
+
+    <!-- Config Path -->
+    <div class="mb-4">
+        <div class="form-group row">
+            <label class="col-sm-2 control-label"> Configuration File Path </label>
+            <div class="col-sm-8">
+                        {% if config_path %}
+                            {% set path = config_path.absolute() %}
+                            {% set placeholder = config_path.absolute() %}
+                        {% else %}
+                            {% set path = "" %}
+                            {% set placeholder = "/full/path/to/configuration.yaml"%}
+                            <div class="card text-white bg-danger mb-3">
+                                <div class="card-header">Configuration File Not Found</div>
+                                <div class="card-body">
+                                <p class="card-text">Unable to locate INGInious configuration file. Please enter the full path of the file.</p>
+                                </div>
+                            </div>
+                            <p for="config_path"></p>
+                        {% endif %}
+                <input class="col" type="text" name="config_path" id="config_path" value="{{ path }}" placeholder="{{ placeholder }}"></input>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <h4 class="mb-3">Weighted Mean</h4>
+        <!-- Enable/disable weighted mean grading -->
+        <div class="form-group row">
+            <label class="col-sm-2 control-label"> Weighted Mean </label>
+            <div class="col-sm-10">
+                <input type="checkbox" id="weighted_mean" name="weighted_mean" {% if config.weighted_mean.enabled %} checked {% endif %}>
+                <label for="weighted_mean">Enabled</label>
+
+            </div>
+        </div>
+
+        <!-- Weighting -->
+        <div class="form-group row">
+            <label class="col-sm-2 control-label"> Weighting </label>
+            <div class="col-sm-10">
+                {# FIXME: how to get proper sizing of this input field? #}
+                <input class="col-sm-1" type="number" name="weighting" min="0.0" max="1.0" step="0.01" value="{{ config.weighted_mean.weighting }}" placeholder="{{ config.weighted_mean.weighting }}"></input>
+                <label for="weighting">(0.0-1.0).</label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Existing categories -->
+    <div class="mb-4">
+        <h4 class="mb-3">Grading Categories</h4>
+        {% for id, category in config.enabled.items() %}
+            <div class="form-group row mb-2" id="category_{{id}}">
+                <div class="col-sm-2 control-label">{{ category.name }}</div>
+                <div class="col-sm-8">
+                    <textarea name="category_description_{{id}}" form="codingstyle_settings_form" class="form-control" id="category_description_{{id}}" >{{ category.description }}</textarea>
+                </div>
+                <div class="col-sm-2">
+                    <!-- hx-confirm doesn't work for non-htmx operations -->
+                    <button
+                        type="button"
+                        onclick='removeElementById("category_{{id}}", "{{category.name}}")'
+                        style="border:none; background: none;"
+                    >
+                        <i class="fa fa-window-close" style="color:lightcoral;"></i>
+                    </button>
+                </div>
+            </div>
+        {% endfor %}
+
+        <script>
+            function removeElementById(id, name=null, prompt=true) {
+                name = name ? name : id
+                if (!prompt || confirm("Are you sure you want to remove the category " + name + "?")) {
+                    document.getElementById(id).remove();
+                }
+
+            }
+        </script>
+
+        <!-- Insert new categories here -->
+        <div id="new-category" class="form-group"></div>
+
+        <div class="row">
+            <div class="col-sm-2"></div>
+            <div class="col-sm-8">
+                <button
+                    class="btn btn-success btn-block"
+                    type="button"
+                    hx-get="{{get_homepath()}}/admin/{{course.get_id()}}/settings/codingstyle/category"
+                    hx-target="#new-category"
+                    hx-swap="afterend"
+                >
+                    <i class="fa fa-plus"></i> New Category
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bar labels -->
+    <div class="mb-4">
+        <h4>Labels & Bars</h4>
+        {% for id, bar  in config.task_list_bars %}
+        <div class="form-group row">
+            <label class="col-sm-2 control-label">
+                {{id.split("_") | join(" ") | title}}
+            </label>
+            <div class="col-sm-4">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="bar_label_{{id}}" name="bar_label_{{id}}" value="{{ bar.label }}">
+                    <div class="input-group-append input-group-text">
+                        <input class="mr-1" type="checkbox" name="bar_enabled_{{id}}" {% if bar.enabled %} checked {% endif %}>
+                        <div>
+                            Enabled
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="mb-4">
+        <h4 class="mb-3">Submission Sidebar</h4>
+        <!-- Enable/disable weighted mean grading -->
+        <div class="form-group row">
+            <label class="col-sm-2 control-label">Show Graders</label>
+            <div class="col-sm-10">
+                <input type="checkbox" id="show_graders" name="show_graders" {% if config.show_graders %} checked {% endif %}>
+                <label for="show_graders">Enabled</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <h4 class="mb-3">Submission Query</h4>
+        <div class="form-group row">
+            <label class="col-sm-2 control-label">Table Header</label>
+            <div class="col-sm-10">
+                <input type="text" id="submissionquery_header" name="submissionquery_header" value="{{config.submission_query.header}}">
+            </div>
+        </div>
+        <div class="form-group row">
+            <label class="col-sm-2 control-label">Query Results Button</label>
+            <div class="col-sm-10">
+                <input type="checkbox" id="submissionquery_button" name="submissionquery_button" {% if config.submission_query.button %} checked {% endif %}>
+                <label for="submissionquery_button">Enabled</label>
+            </div>
+        </div>
+        <div class="form-group row">
+            <label class="col-sm-2 control-label">Plugin Priority</label>
+            <div class="col-sm-10">
+                <input type="number" value="{{config.submission_query.priority}}" id="submissionquery_priority" name="submissionquery_priority">
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-sm-2"></div>
+        <div class="col-sm-8">
+            <button
+                _="on click go to the top of the body smoothly"
+                class="btn btn-primary btn-block"
+                type="submit"
+                hx-post="{{get_homepath()}}/admin/{{course.get_id()}}/settings/codingstyle"
+                hx-target="#save-result"
+            >
+                <i class="fa fa-download"></i> {{ _("Save changes") }}
+            </button>
+        </div>
+    </div>
+
+
+
+</form>
+
+<hr class="m-5"/>
+
+{# TODO: add "this course only" toggle for repair functions #}
+
+<div class="row mb-2">
+    <div class="col">
+        <h2>Diagnose and Repair</h2>
+
+    </div>
+</div>
+
+<div class="row">
+    <label class="col-sm-2 control-label"></label>
+    <div class="col-sm-8">
+        <p>This section provides diagnostics and repair tools that ensures all submissions are properly formatted and configured in the database for use with the plugin. </p>
+    </div>
+</div>
+<div class="row mb-4">
+    <div class="col-sm-2"></div>
+    <div class="col-sm-8">
+        <div class="card text-white bg-warning mb-3">
+            <div class="card-header">Warning</div>
+            <div class="card-body">
+              <p class="card-text"> It is recommended to take a backup of submissions before attempting to modify or repair them.</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<div class="row mb-5">
+    <label class="col-sm-2 control-label">Diagnose</label>
+    <div class="col-sm-8">
+        <button
+            type="button"
+            class="btn btn-danger mb-2"
+            hx-get="/admin/{{ course.get_id() }}/settings/codingstyle/diagnose"
+            hx-target="#diagnosis-results"
+            hx-indicator="#diagnosis-indicator"
+        >
+            Diagnose
+        </button>
+
+        <div id="diagnosis-results">
+            <!-- Show spinner when fetching diagnosis -->
+            <!-- By Sam Herbert (@sherb), for everyone. More @ http://goo.gl/7AJzbL -->
+            <svg id="diagnosis-indicator"
+            class="htmx-indicator" width="38" height="38" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient x1="8.042%" y1="0%" x2="65.682%" y2="23.865%" id="a">
+                        <stop stop-color="#000" stop-opacity="0" offset="0%"/>
+                        <stop stop-color="#000" stop-opacity=".631" offset="63.146%"/>
+                        <stop stop-color="#000" offset="100%"/>
+                    </linearGradient>
+                </defs>
+                <g fill="none" fill-rule="evenodd">
+                    <g transform="translate(1 1)">
+                        <path d="M36 18c0-9.94-8.06-18-18-18" id="Oval-2" stroke="url(#a)" stroke-width="2">
+                            <animateTransform
+                                attributeName="transform"
+                                type="rotate"
+                                from="0 18 18"
+                                to="360 18 18"
+                                dur="0.9s"
+                                repeatCount="indefinite" />
+                        </path>
+                        <circle fill="#fff" cx="36" cy="18" r="1">
+                            <animateTransform
+                                attributeName="transform"
+                                type="rotate"
+                                from="0 18 18"
+                                to="360 18 18"
+                                dur="0.9s"
+                                repeatCount="indefinite" />
+                        </circle>
+                    </g>
+                </g>
+            </svg>
+        </div>
+    </div>
+</div>
+
+<!-- Repair missing or inconsistent grades -->
+<div class="row mb-5">
+    <label for="name" class="col-sm-2 control-label">Repair</label>
+    <div class="col-sm-8" id="repair-card">
+        <div class="card">
+            <div class="card-header">
+                Repair grades
+            </div>
+            <div class="card-body">
+                <p>Attempts to repair inconsistent and missing grades for <i>all</i> submissions.</p>
+            </div>
+            <button
+                type="button"
+                class="btn btn-danger"
+                hx-patch="{{get_homepath()}}/admin/{{course.get_id()}}/settings/codingstyle?repair=1"
+                hx-confirm="Are you sure you want to attempt to repair grades of all submissions? This could take some time."
+                hx-target="#repair-card"
+            >
+                Repair
+            </button>
+        </div>
+    </div>
+    <div class="col-sm-2"></div>
+</div>
+
+<!-- Recalculate mean grades -->
+<div class="row mb-5">
+    <label for="name" class="col-sm-2 control-label">Recalculate</label>
+    <div class="col-sm-8" id="recalculate-card">
+        <div class="card">
+            <div class="card-header">
+                Recalculate weighted mean grades
+            </div>
+            <div class="card-body">
+                <p>Recalculates weighted mean grades of <i>all</i> submissions. </p>
+                <p>This action should only be necessary if weighting has been manually modified in the configuration file. When changing weighting through the web interface, mean grades are automatically adjusted for all submissions.</p>
+            </div>
+            <button
+                type="button"
+                class="btn btn-danger"
+                hx-patch="{{get_homepath()}}/admin/{{course.get_id()}}/settings/codingstyle?recalculate=1"
+                hx-confirm="Are you sure you want to recalculate weighted mean grades of all submissions? This can take a few minutes if your database contains a lot of submissions."
+                hx-target="#recalculate-card"
+            >
+                Recalculate
+            </button>
+        </div>
+    </div>
+    <div class="col-sm-2"></div>
+</div>
+
+
+{% endblock %}
