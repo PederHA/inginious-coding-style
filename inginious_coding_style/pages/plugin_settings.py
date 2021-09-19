@@ -69,7 +69,7 @@ class FormParser:
         return SettingsForm(
             config_path=self.form["config_path"],
             weighting=self.form["weighting"],
-            weighted_mean=self.form["weighted_mean"],
+            weighted_mean=self.form.get("weighted_mean", False),
             categories=categories,
             task_list_bars=task_list_bars,
             show_graders=self.form.get("show_graders", False),  # checkbox default
