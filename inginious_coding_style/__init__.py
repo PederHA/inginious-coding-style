@@ -71,6 +71,8 @@ def submission_query_button(
 ) -> str:
     # TODO: in the future, we should attempt to cache submission info
     # so that we don't have to do twice the amount of work for two hooks.
+    if not PLUGIN_CONFIG.submission_query.button:
+        return ""
     return template_helper.render(
         "submission_query_button.html",
         has_grades=has_coding_style_grades(submission),
@@ -103,6 +105,8 @@ def task_list_item(
 
 def task_list_bar_label(course: Course, template_helper: TemplateHelper) -> str:
     """Modifies the label for the default INGInious grade progress bar."""
+    if not PLUGIN_CONFIG.task_list_bars.total_grade.enabled:
+        return ""
     return PLUGIN_CONFIG.task_list_bars.total_grade.label
 
 
@@ -150,8 +154,7 @@ def init(
     #############################
 
     # Add label to default INGInious grade progress bars
-    if config.task_list_bars.total_grade.enabled:
-        plugin_manager.add_hook("task_list_bar_label", task_list_bar_label)
+    plugin_manager.add_hook("task_list_bar_label", task_list_bar_label)
 
     # Display coding style grades in list of tasks for a course
     plugin_manager.add_hook("task_list_item", task_list_item)
@@ -180,12 +183,11 @@ def init(
     )
 
     # Add button to submission query table row
-    if config.submission_query.button:
-        plugin_manager.add_hook(
-            "submission_query_button",
-            submission_query_button,
-            prio=config.submission_query.priority,
-        )
+    plugin_manager.add_hook(
+        "submission_query_button",
+        submission_query_button,
+        prio=config.submission_query.priority,
+    )
 
     #############################
     #                           #

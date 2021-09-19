@@ -236,7 +236,7 @@ class PluginSettingsPage(INGIniousAdminPage, BasePluginPage, SubmissionMixin):
             """
 
     def _handle_update_settings(self, settings_form: ImmutableMultiDict) -> None:
-        """Parses settings form and updates the config (in-memory and on-disk)
+        """Parses settings form and updates the config (in memory and on disk)
         with its values. Updates submissions in the database if weighting
         or grading mode is changed.
 
