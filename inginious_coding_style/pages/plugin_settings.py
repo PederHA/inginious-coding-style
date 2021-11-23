@@ -56,6 +56,8 @@ class TaskListBar_Form(BarBase):
 
 
 class FormParser:
+    """Parses the plugin settings form."""
+
     form: Dict[str, Any]
 
     def __init__(self, form: ImmutableMultiDict, config: PluginConfig) -> None:
@@ -184,7 +186,7 @@ def update_config_with_form(config: PluginConfig, form: SettingsForm) -> PluginC
 
 
 class PluginSettingsPage(INGIniousAdminPage, BasePluginPage, SubmissionMixin):
-    """TODO: ADD DOCSTRING"""
+    """Page that displays plugin settings and submission diagnostics."""
 
     def GET_AUTH(self, courseid: str) -> str:
         """Displays all coding style grades for a given course for a user."""
@@ -352,6 +354,8 @@ class SubmissionDiagnosis:
 
 
 class SubmissionStatusDiagnoser(INGIniousAdminPage, BasePluginPage, AdminPageMixin):
+    """Attempts to diagnose broken coding style grades for all submissions."""
+
     def GET_AUTH(self, courseid: str = None) -> str:
         # param courseid is for an eventual per-course plugin activation
         self.get_course_and_check_rights(courseid)
