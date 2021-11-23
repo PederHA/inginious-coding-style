@@ -18,8 +18,7 @@ from unidecode import unidecode
 from werkzeug.datastructures import ImmutableMultiDict
 from werkzeug.exceptions import BadRequest
 
-from ..config import (BarBase, PluginConfig, SubmissionQuerySettings,
-                      TaskListBars)
+from ..config import PluginConfig, SubmissionQuerySettings, TaskListBars
 from ..fs import get_config_path, update_config_file
 from ..grades import GradingCategory
 from ..mixins import AdminPageMixin, SubmissionMixin
@@ -49,10 +48,6 @@ class SettingsForm(BaseModel):
     task_list_bars: TaskListBars
     show_graders: bool = False
     submission_query: SubmissionQuerySettings
-
-
-class TaskListBar_Form(BarBase):
-    enabled: bool = False
 
 
 class FormParser:
