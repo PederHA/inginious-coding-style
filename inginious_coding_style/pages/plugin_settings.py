@@ -9,7 +9,7 @@ from collections import Counter
 from copy import deepcopy
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Set, Union
+from typing import Any, Dict, List, Optional, Set, Union
 
 from flask import request, session
 from inginious.frontend.pages.course_admin.utils import INGIniousAdminPage
@@ -18,6 +18,7 @@ from unidecode import unidecode
 from werkzeug.datastructures import ImmutableMultiDict
 from werkzeug.exceptions import BadRequest
 
+from .._types import INGIniousUserTask
 from ..config import PluginConfig, SubmissionQuerySettings, TaskListBars
 from ..fs import get_config_path, update_config_file
 from ..grades import GradingCategory
@@ -317,16 +318,15 @@ class PluginSettingsPage(INGIniousAdminPage, BasePluginPage, SubmissionMixin):
         `str`
             Bootstrap HTML card denoting success of operation.
         """
-        exc = None
-        failed = None
+        exc: Optional[Exception] = None
+        failed: List[INGIniousUserTask] = []
         try:
             failed = self.swap_active_grade(self.config.weighted_mean.enabled)
-        except Exception as e:
+        except Exception as exc:
             self._logger.error(
                 "An exception occured when attempting to repair submission grades.",
-                exc_info=e,
+                exc_info=exc,
             )
-            exc = e
 
         return self.template_helper.render(
             "repair_submissions.html",
