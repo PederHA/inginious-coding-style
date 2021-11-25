@@ -10,9 +10,15 @@ GradingCategoryIn = Dict[str, Union[str, int]]
 GradesIn = Dict[str, GradingCategoryIn]
 
 
+# NOTE ON TypedDict:
+#
+# These types only serve to provide IDE autocompletion and
+# rudimentary type checking. There is no runtime validation involved.
+
+
 class INGIniousSubmission(TypedDict):
-    """Represents an INGInious student submission as retrieved by the
-    submission manager.
+    """Represents a document in the `submissions` DB collection,
+    which is the collection holding student submissions.
 
     Source: https://docs.inginious.org/en/v0.7/dev_doc/internals_doc/submissions.html#state
     """
@@ -53,7 +59,9 @@ class INGIniousUserTask(TypedDict):
 
 
 class PluginUserTask(INGIniousUserTask):
-    """Version of INGIniousUserTask that includes base and mean grades."""
+    """Represents a `user_tasks` document that has been modified
+    by the plugin to include base and mean grades.
+    """
 
     grade_mean: float
     grade_base: float
