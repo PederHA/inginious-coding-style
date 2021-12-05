@@ -23,6 +23,7 @@ def get_best_submission(task: Task) -> Optional[Submission]:
     best = None
     for submission in submissions:
         if best is None or submission["grade"] > best["grade"]:
+            # NOTE: Prefer newest submission?
             best = submission
     return get_submission(best) if best else best
 

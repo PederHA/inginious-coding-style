@@ -16,6 +16,7 @@ TEMPLATE_FOLDER = Path(frontend.__file__).parent / "templates"
 
 
 # Human-readable names/descriptions of the models
+# TODO: Move these names to the models themselves?
 model_names = {
     GradingCategory: "Grading category",
     Submission: "Submission",
@@ -28,7 +29,7 @@ def handle_validation_error(exc: ValidationError) -> Tuple[str, int]:
     return (
         TEMPLATE_HELPER.render(
             "internalerror.html",
-            message=f"Failed to validate {model_names.get(exc.model, exc.model)}.",
+            message=f"Failed to validate {model_names.get(exc.model, exc.model)}.",  # type: ignore
         ),
         500,  # status code
     )

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, cast
 
 from bson.errors import InvalidId
 from inginious.frontend.courses import Course
@@ -7,7 +7,7 @@ from inginious.frontend.pages.utils import INGIniousPage
 from inginious.frontend.tasks import Task
 from werkzeug.exceptions import Forbidden, InternalServerError, NotFound
 
-from ._types import GradesIn
+from ._types import GradesIn, INGIniousUserTask, PluginUserTask
 from .config import PluginConfig
 from .grades import get_grades
 from .submission import Submission, get_submission
@@ -82,7 +82,10 @@ class SubmissionMixin(BaseMixin):
 
     def _fetch_submission(self, submissionid: str, user_check: bool) -> Submission:
         """Slimmed down version of SubmissionPage.fetch_submission.
-        Only returns Submission, instead of Tuple[Course, Task, OrderedDict]"""
+        Only returns Submission, instead of Tuple[Course, Task, OrderedDict].
+
+        TODO: should submissionid be of type `ObjectId`?
+        """
         try:
             submission = self.submission_manager.get_submission(
                 submissionid, user_check
@@ -121,7 +124,7 @@ class SubmissionMixin(BaseMixin):
         try:
             task = course.get_task(submission.taskid)
         except Exception as e:
-            if submission.taskid:
+            if not submission.taskid:  # 2021-11-23: I think this should be NOT
                 msg = (
                     f"Submission {submission._id} is not associated with a task. "
                     "Has the submission been corrupted?"
@@ -135,7 +138,7 @@ class SubmissionMixin(BaseMixin):
             raise InternalServerError("Unable to display submission.")
         return task
 
-    def swap_active_grade(self, to_mean: bool) -> List[dict]:
+    def swap_active_grade(self, to_mean: bool) -> List[INGIniousUserTask]:
         """Enables/disables weighted grades for all top submissions by
         modifying the `grade` key of each submission stored in the
         `user_tasks` collection.
@@ -151,34 +154,34 @@ class SubmissionMixin(BaseMixin):
         `List[dict]`
             Submissions that could not be modified.
         """
-        failed: List[dict] = []
-        for user_task in self.database.user_tasks.find():  # type: Dict[str, Any]
+        failed: List[INGIniousUserTask] = []
+        for user_task in self.database.user_tasks.find():  # type: INGIniousUserTask
             try:
-                # Skip user tasks with 0 tries
+                # Skip user tasks with 0 student attempts
                 if user_task.get("tried", 0) == 0:
                     continue
-                user_task = self._check_and_fix_user_task(user_task)
+                task = self._check_and_fix_user_task(user_task)
 
                 if to_mean:  # Set active grade to either BASE or MEAN
-                    user_task["grade"] = user_task["grade_mean"]
+                    task["grade"] = task["grade_mean"]
                 else:
-                    user_task["grade"] = user_task["grade_base"]
+                    task["grade"] = task["grade_base"]
 
                 self.database.user_tasks.update_one(  # Update item in database
                     # NOTE: is it faster to pass {"$set": {"grade": active_grade}}
                     #       as the `update` argument?
-                    {"_id": user_task["_id"]},
-                    {"$set": user_task},
+                    {"_id": task["_id"]},
+                    {"$set": task},
                 )
             except Exception as e:
                 self._logger.error(
-                    f"Failed to modify submission {user_task.get('submissionid')}",
+                    f"Failed to modify submission {task.get('submissionid')}",
                     exc_info=e,
                 )
                 failed.append(user_task)
         return failed
 
-    def recalculate_weighted_mean(self) -> List[dict]:
+    def recalculate_weighted_mean(self) -> List[INGIniousUserTask]:
         """Recalculates weighted mean grades for all documents in the
         `user_tasks` collection.
 
@@ -187,16 +190,16 @@ class SubmissionMixin(BaseMixin):
         `List[dict]`
             Submissions that failed to be modified.
         """
-        failed: List[dict] = []
-        for user_task in self.database.user_tasks.find():
+        failed: List[INGIniousUserTask] = []
+        for user_task in self.database.user_tasks.find():  # type: INGIniousUserTask
             try:
                 # Skip user tasks with 0 tries
                 if user_task.get("tried", 0) == 0:
                     continue
-                user_task = self._check_and_fix_user_task(user_task)
+                task = self._check_and_fix_user_task(user_task)
                 submission = self._fetch_submission(
-                    user_task.get("submissionid"), user_check=False
-                )
+                    task.get("submissionid", "0"), user_check=False
+                )  # FIXME: check if we should default to ObjectId instead of str
                 self.set_user_tasks_grades(submission)
             except Exception as e:
                 self._logger.error(
@@ -206,7 +209,7 @@ class SubmissionMixin(BaseMixin):
                 failed.append(user_task)
         return failed
 
-    def _check_and_fix_user_task(self, user_task: Dict[str, Any]) -> Dict[str, Any]:
+    def _check_and_fix_user_task(self, user_task: INGIniousUserTask) -> PluginUserTask:
         """Ensures a document from the `user_tasks` collection contains
         the keys required to modify its displayed grade on the frontend.
         If the document does not have the keys `grade_base` and/or
@@ -214,13 +217,14 @@ class SubmissionMixin(BaseMixin):
 
         Parameters
         ----------
-        user_task : Dict[str, Any]
+        user_task : INGIniousUserTask
             A document from the `user_tasks` DB collection
 
         Returns
         -------
-        Dict[str, Any]
-            Modified `user_tasks` document.
+        PluginUserTask
+            Modified `user_tasks` document that includes keys/values
+            required by the plugin.
 
         Raises
         ------
@@ -229,10 +233,13 @@ class SubmissionMixin(BaseMixin):
             exceptions raised by `_fetch_submission()` also apply. Callers of
             this method should implement exception handling accordingly.
         """
-
         for key in ["grade", "submissionid"]:
             if user_task.get(key) is None:
                 raise KeyError(f"User Task {user_task.get('_id')} has no key '{key}'.")
+
+        # mypy: Signal that our user task has the correct type
+        # FIXME: This will cause issues if we expand PluginUserTask in the future
+        user_task = cast(PluginUserTask, user_task)
 
         if user_task.get("grade_base") is None or user_task.get("grade_mean") is None:
             # Fetch submission and set user_task's grade_base to submission's grade
@@ -275,8 +282,8 @@ class SubmissionMixin(BaseMixin):
 
         Parameters
         ----------
-        submissionid : `str`
-            ID of the submission to update grades of.
+        submission : `Submission`
+            The submission to update grades of.
         grades_data : `GradesIn`
             Input from grading form on the WebApp.
 

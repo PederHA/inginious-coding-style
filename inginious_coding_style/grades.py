@@ -43,6 +43,7 @@ class CodingStyleGrades(BaseModel):
         return any(g for g in self.grades)
 
     def __contains__(self, other: Union[str, GradingCategory]) -> bool:
+        """Checks if self contains a category with a given ID."""
         if isinstance(other, str):
             return other in self.__root__
         elif isinstance(other, GradingCategory):
@@ -52,9 +53,11 @@ class CodingStyleGrades(BaseModel):
         return False
 
     def __len__(self) -> int:
+        """Returns number of categories."""
         return len(self.__root__)
 
     def __getitem__(self, key: str) -> GradingCategory:
+        """Retrieves a category based on its ID."""
         return self.__root__[key]
 
     @property

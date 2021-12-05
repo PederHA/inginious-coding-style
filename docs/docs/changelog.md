@@ -5,13 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-## [1.5.0] 2021-08-XX
+## [1.5.0] 2021-12-05
 
 ### Added
 
 - `graded_by` attribute for submissions which keeps track of which tutors/admins have graded a submission. This change is reflected on the front-end as well.
 - Option to show/hide the `graded_by` info in the sidebar of student coding style grades overview (`/submissions/<submissionid>/codingstyle`).
+- Plugin configuration menu in the INGInious WebApp which can be located in the sidebar of the administration page of any course (`/admin/<courseid>/settings`).
 
 ### Changed
 

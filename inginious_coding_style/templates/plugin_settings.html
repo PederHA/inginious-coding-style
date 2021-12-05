@@ -1,8 +1,18 @@
+{% macro category(name, description) -%}
+<h4>{{ name }}</h4>
+
+<div class="row mb-2">
+    <div class="col">
+        <p><i>{{ description }}</i></p>
+    </div>
+</div>
+{%- endmacro %}
+
 {% extends "layout.html" %}
 
 {% block head %}
 {{ super() }}
-{# Add htmx #}
+{# Add htmx and hyperscript #}
 <script src="https://unpkg.com/htmx.org@1.5.0"></script>
 <script src="https://unpkg.com/hyperscript.org@0.8.1"></script>
 {% endblock %}
@@ -27,7 +37,7 @@
 
 {% block content %}
 
-<div class="row mb-2">
+<div class="row mb-5">
     <div class="col">
         <h2>Coding Style Plugin Settings</h2>
     </div>
@@ -37,11 +47,15 @@
     <!-- Insert HTMX response here -->
     <div id="save-result">
     </div>
-
+    {{ category(
+        name="Configuration File",
+        description="Define path of INGInious configuration file if not automatically detected."
+        )
+    }}
     <!-- Config Path -->
     <div class="mb-4">
         <div class="form-group row">
-            <label class="col-sm-2 control-label"> Configuration File Path </label>
+            <label class="col-sm-2 control-label">Path</label>
             <div class="col-sm-8">
                         {% if config_path %}
                             {% set path = config_path.absolute() %}
@@ -63,14 +77,17 @@
     </div>
 
     <div class="mb-4">
-        <h4 class="mb-3">Weighted Mean</h4>
+        {{ category(
+            name="Weighted Mean",
+            description="Toggle weighted mean grading and define weighting."
+            )
+        }}
         <!-- Enable/disable weighted mean grading -->
         <div class="form-group row">
             <label class="col-sm-2 control-label"> Weighted Mean </label>
             <div class="col-sm-10">
                 <input type="checkbox" id="weighted_mean" name="weighted_mean" {% if config.weighted_mean.enabled %} checked {% endif %}>
                 <label for="weighted_mean">Enabled</label>
-
             </div>
         </div>
 
@@ -87,7 +104,8 @@
 
     <!-- Existing categories -->
     <div class="mb-4">
-        <h4 class="mb-3">Grading Categories</h4>
+        {{ category("Grading Categories", "Add, remove, and modify grading categories.") }}
+
         {% for id, category in config.enabled.items() %}
             <div class="form-group row mb-2" id="category_{{id}}">
                 <div class="col-sm-2 control-label">{{ category.name }}</div>
@@ -138,7 +156,12 @@
 
     <!-- Bar labels -->
     <div class="mb-4">
-        <h4>Labels & Bars</h4>
+        {{ category(
+            name="Bars & Labels",
+            description="Bar and label configuration for student task list page (<code>/course/&lt;courseid&gt;</courseid></code>)." | safe
+            )
+        }}
+
         {% for id, bar  in config.task_list_bars %}
         <div class="form-group row">
             <label class="col-sm-2 control-label">
@@ -160,10 +183,15 @@
     </div>
 
     <div class="mb-4">
-        <h4 class="mb-3">Submission Sidebar</h4>
-        <!-- Enable/disable weighted mean grading -->
+        {{ category(
+            name="Submission Sidebar",
+            description="Information displayed in the sidebar of a student's submission (<code>/submission/&lt;submissionid&gt;/codingstyle</code>)." | safe
+            )
+        }}
+
+        <!-- Show/hide who graded a submissions -->
         <div class="form-group row">
-            <label class="col-sm-2 control-label">Show Graders</label>
+            <label class="col-sm-2 control-label" data-toggle="tooltip" data-placement="top" title="Show names of tutors that have graded a submission.">Show Graders</label>
             <div class="col-sm-10">
                 <input type="checkbox" id="show_graders" name="show_graders" {% if config.show_graders %} checked {% endif %}>
                 <label for="show_graders">Enabled</label>
@@ -172,7 +200,11 @@
     </div>
 
     <div class="mb-4">
-        <h4 class="mb-3">Submission Query</h4>
+        {{ category(
+            name="Submission Query",
+            description="Configuration of submission query page (<code>/admin/&lt;courseid&gt;/submissions</code>)." | safe
+            )
+        }}
         <div class="form-group row">
             <label class="col-sm-2 control-label">Table Header</label>
             <div class="col-sm-10">

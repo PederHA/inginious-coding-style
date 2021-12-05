@@ -9,7 +9,7 @@ from collections import Counter
 from copy import deepcopy
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Set, Union
+from typing import Any, Dict, List, Optional, Set, Union
 
 from flask import request, session
 from inginious.frontend.pages.course_admin.utils import INGIniousAdminPage
@@ -18,8 +18,8 @@ from unidecode import unidecode
 from werkzeug.datastructures import ImmutableMultiDict
 from werkzeug.exceptions import BadRequest
 
-from ..config import (BarBase, PluginConfig, SubmissionQuerySettings,
-                      TaskListBars)
+from .._types import INGIniousUserTask
+from ..config import PluginConfig, SubmissionQuerySettings, TaskListBars
 from ..fs import get_config_path, update_config_file
 from ..grades import GradingCategory
 from ..mixins import AdminPageMixin, SubmissionMixin
@@ -51,11 +51,9 @@ class SettingsForm(BaseModel):
     submission_query: SubmissionQuerySettings
 
 
-class TaskListBar_Form(BarBase):
-    enabled: bool = False
-
-
 class FormParser:
+    """Parses the plugin settings form."""
+
     form: Dict[str, Any]
 
     def __init__(self, form: ImmutableMultiDict, config: PluginConfig) -> None:
@@ -184,7 +182,7 @@ def update_config_with_form(config: PluginConfig, form: SettingsForm) -> PluginC
 
 
 class PluginSettingsPage(INGIniousAdminPage, BasePluginPage, SubmissionMixin):
-    """TODO: ADD DOCSTRING"""
+    """Page that displays plugin settings and submission diagnostics."""
 
     def GET_AUTH(self, courseid: str) -> str:
         """Displays all coding style grades for a given course for a user."""
@@ -320,16 +318,15 @@ class PluginSettingsPage(INGIniousAdminPage, BasePluginPage, SubmissionMixin):
         `str`
             Bootstrap HTML card denoting success of operation.
         """
-        exc = None
-        failed = None
+        exc: Optional[Exception] = None
+        failed: List[INGIniousUserTask] = []
         try:
             failed = self.swap_active_grade(self.config.weighted_mean.enabled)
-        except Exception as e:
+        except Exception as exc:
             self._logger.error(
                 "An exception occured when attempting to repair submission grades.",
-                exc_info=e,
+                exc_info=exc,
             )
-            exc = e
 
         return self.template_helper.render(
             "repair_submissions.html",
@@ -352,6 +349,8 @@ class SubmissionDiagnosis:
 
 
 class SubmissionStatusDiagnoser(INGIniousAdminPage, BasePluginPage, AdminPageMixin):
+    """Attempts to diagnose broken coding style grades for all submissions."""
+
     def GET_AUTH(self, courseid: str = None) -> str:
         # param courseid is for an eventual per-course plugin activation
         self.get_course_and_check_rights(courseid)
