@@ -282,8 +282,8 @@ class SubmissionMixin(BaseMixin):
 
         Parameters
         ----------
-        submissionid : `str`
-            ID of the submission to update grades of.
+        submission : `Submission`
+            The submission to update grades of.
         grades_data : `GradesIn`
             Input from grading form on the WebApp.
 
