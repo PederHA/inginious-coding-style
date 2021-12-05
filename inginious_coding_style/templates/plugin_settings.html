@@ -88,7 +88,6 @@
             <div class="col-sm-10">
                 <input type="checkbox" id="weighted_mean" name="weighted_mean" {% if config.weighted_mean.enabled %} checked {% endif %}>
                 <label for="weighted_mean">Enabled</label>
-
             </div>
         </div>
 
@@ -190,9 +189,9 @@
             )
         }}
 
-        <!-- Enable/disable weighted mean grading -->
+        <!-- Show/hide who graded a submissions -->
         <div class="form-group row">
-            <label class="col-sm-2 control-label">Show Graders</label>
+            <label class="col-sm-2 control-label" data-toggle="tooltip" data-placement="top" title="Show names of tutors that have graded a submission.">Show Graders</label>
             <div class="col-sm-10">
                 <input type="checkbox" id="show_graders" name="show_graders" {% if config.show_graders %} checked {% endif %}>
                 <label for="show_graders">Enabled</label>
