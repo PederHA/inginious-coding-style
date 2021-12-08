@@ -20,7 +20,7 @@ from werkzeug.exceptions import BadRequest
 
 from .._types import INGIniousUserTask
 from ..config import PluginConfig, SubmissionQuerySettings, TaskListBars
-from ..fs import get_config_path, update_config_file
+from ..fs import chmod_x, get_config_path, is_writeable, update_config_file
 from ..grades import GradingCategory
 from ..mixins import AdminPageMixin, SubmissionMixin
 from .base import BasePluginPage
@@ -189,6 +189,10 @@ class PluginSettingsPage(INGIniousAdminPage, BasePluginPage, SubmissionMixin):
         course, _ = self.get_course_and_check_rights(courseid)
 
         config_path = get_config_path()
+        if config_path is not None and is_writeable(config_path):
+            config_writeable = True
+        else:
+            config_writeable = False
 
         return self.template_helper.render(
             "plugin_settings.html",
@@ -197,6 +201,7 @@ class PluginSettingsPage(INGIniousAdminPage, BasePluginPage, SubmissionMixin):
             user_manager=self.user_manager,
             config=self.config,
             config_path=config_path,
+            config_writeable=config_writeable,
         )
 
     def POST_AUTH(self, courseid: str) -> str:
@@ -221,17 +226,19 @@ class PluginSettingsPage(INGIniousAdminPage, BasePluginPage, SubmissionMixin):
             self._handle_update_settings(request.form)
         except Exception as e:
             self._logger.error(f"Failed to update configuration.", exc_info=e)
-            return f"""<div class="alert alert-danger" role="alert">Failed to update configuration. Reason: {e}</div>"""
+            return self.template_helper.render(
+                "alert.html",
+                template_folder=self.templates_path,
+                message="Failed to update configuration.",
+                exception=e,
+            )
         else:
-            return """
-                <div
-                    class="alert alert-success update-success"
-                    _="on load wait 5s then transition opacity to 0 then remove me"
-                    role="alert"
-                >
-                    Successfully updated settings.
-            </div>
-            """
+            return self.template_helper.render(
+                "alert.html",
+                template_folder=self.templates_path,
+                message="Successfully updated settings.",
+                success=True,
+            )
 
     def _handle_update_settings(self, settings_form: ImmutableMultiDict) -> None:
         """Parses settings form and updates the config (in memory and on disk)
@@ -334,6 +341,35 @@ class PluginSettingsPage(INGIniousAdminPage, BasePluginPage, SubmissionMixin):
             failed=failed,
             exc=exc,
         )
+
+
+class FixConfigPermissionsEndpoint(INGIniousAdminPage, BasePluginPage):
+    def POST_AUTH(self, courseid: str, **kwargs) -> str:
+        self.get_course_and_check_rights(courseid)
+
+        if not request.form or not (config_path := request.form.get("config_path")):
+            raise BadRequest(
+                "Request must contain a form payload with the key 'config_path'."
+            )
+
+        try:
+            chmod_x(config_path)
+        except OSError as e:
+            return self.template_helper.render(
+                "alert.html",
+                template_folder=self.templates_path,
+                message=(
+                    f"Failed to change permissions of {config_path}."
+                    f"You need to manually ensure the user running inginious-webapp has write permissions for {config_path}."
+                ),
+            )
+        else:
+            return self.template_helper.render(
+                "alert.html",
+                template_folder=self.templates_path,
+                message="Successfully changed permissions of config file.",
+                success=True,
+            )
 
 
 @dataclass
