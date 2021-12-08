@@ -70,7 +70,7 @@ def update_config_file(plugin_config: PluginConfig, config_path: Path) -> None:
     write_json_or_yaml(p, config)
 
 
-def is_writeable(fp: Union[str, Path, os.PathLike]) -> bool:
+def is_writable(fp: Union[str, Path, os.PathLike]) -> bool:
     return os.access(str(fp), os.W_OK)
 
 

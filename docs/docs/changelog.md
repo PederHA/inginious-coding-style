@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Detection and repair of config that cannot be written to by inginious-webapp.
-    - Now shows an alert and button that can be pressed to attempt to make the configuration file writeable.
+    - Now shows an alert and button that can be pressed to attempt to make the configuration file writable.
 
 ## [1.5.0] 2021-12-05
 

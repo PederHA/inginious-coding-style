@@ -20,7 +20,7 @@ from werkzeug.exceptions import BadRequest
 
 from .._types import INGIniousUserTask
 from ..config import PluginConfig, SubmissionQuerySettings, TaskListBars
-from ..fs import chmod_x, get_config_path, is_writeable, update_config_file
+from ..fs import chmod_x, get_config_path, is_writable, update_config_file
 from ..grades import GradingCategory
 from ..mixins import AdminPageMixin, SubmissionMixin
 from .base import BasePluginPage
@@ -189,10 +189,10 @@ class PluginSettingsPage(INGIniousAdminPage, BasePluginPage, SubmissionMixin):
         course, _ = self.get_course_and_check_rights(courseid)
 
         config_path = get_config_path()
-        if config_path is not None and is_writeable(config_path):
-            config_writeable = True
+        if config_path is not None and is_writable(config_path):
+            config_writable = True
         else:
-            config_writeable = False
+            config_writable = False
 
         return self.template_helper.render(
             "plugin_settings.html",
@@ -201,7 +201,7 @@ class PluginSettingsPage(INGIniousAdminPage, BasePluginPage, SubmissionMixin):
             user_manager=self.user_manager,
             config=self.config,
             config_path=config_path,
-            config_writeable=config_writeable,
+            config_writable=config_writable,
         )
 
     def POST_AUTH(self, courseid: str) -> str:

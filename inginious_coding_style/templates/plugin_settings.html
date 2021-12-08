@@ -43,18 +43,18 @@
     </div>
 </div>
 
-{% if config_path and not config_writeable %}
-<div id="not_writeable_alert">
+{% if config_path and not config_writable %}
+<div id="not_writable_alert">
     <div class="alert alert-danger" role="alert">
         The configuration file is not writable! Click the button to attempt to fix the problem.
     </div>
     <button
         type="button"
         class="btn btn-primary"
-        hx-confirm="This action will attempt to make the file writeable by user running inginious-webapp. Are you sure you want to proceed?"
+        hx-confirm="This action will attempt to make the file writable by user running inginious-webapp. Are you sure you want to proceed?"
         hx-post="{{get_homepath()}}/admin/{{course.get_id()}}/settings/codingstyle/fixconfig"
         hx-vals='{"config_path": "{{config_path.absolute()}}"}'
-        hx-target="#not_writeable_alert"
+        hx-target="#not_writable_alert"
 
     >Repair</button>
 </div>
