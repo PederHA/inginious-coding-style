@@ -42,7 +42,7 @@ jobs:
         if: steps.cache-deps.cache-hit != 'true'
         run: |
           poetry config virtualenvs.in-project true
-          poetry install --no-interaction --dev
+          poetry install --no-interaction
       # END CACHE DEPENDENCIES
       - name: Generate artifacts for documentation
         run: cd docs/scripts && /bin/bash run.sh
