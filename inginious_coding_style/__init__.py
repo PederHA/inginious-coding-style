@@ -16,7 +16,7 @@ from .pages import (CodingStyleGradingPage, FixConfigPermissionsEndpoint,
                     SubmissionStatusDiagnoser)
 from .utils import get_best_submission, has_coding_style_grades
 
-__version__ = "1.5.0"
+__version__ = "1.5.1"
 
 PLUGIN_PATH = Path(__file__).parent.absolute()
 TEMPLATES_PATH = PLUGIN_PATH / "templates"
