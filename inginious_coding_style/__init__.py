@@ -10,12 +10,13 @@ from inginious.frontend.template_helper import TemplateHelper
 
 from ._types import INGIniousSubmission
 from .config import PluginConfig, get_config
-from .pages import (CodingStyleGradingPage, NewCategoryEndpoint,
-                    PluginSettingsPage, StudentSubmissionCodingStylePage,
+from .pages import (CodingStyleGradingPage, FixConfigPermissionsEndpoint,
+                    NewCategoryEndpoint, PluginSettingsPage,
+                    StudentSubmissionCodingStylePage,
                     SubmissionStatusDiagnoser)
 from .utils import get_best_submission, has_coding_style_grades
 
-__version__ = "1.5.0"
+__version__ = "1.5.1"
 
 PLUGIN_PATH = Path(__file__).parent.absolute()
 TEMPLATES_PATH = PLUGIN_PATH / "templates"
@@ -238,6 +239,15 @@ def init(
         "/admin/<courseid>/settings/codingstyle/category",
         NewCategoryEndpoint.as_view(
             "new_category_endpoint",
+            config,
+            TEMPLATES_PATH,
+        ),
+    )
+
+    plugin_manager.add_page(
+        "/admin/<courseid>/settings/codingstyle/fixconfig",
+        FixConfigPermissionsEndpoint.as_view(
+            "fix_config_permissions_endpoint",
             config,
             TEMPLATES_PATH,
         ),

@@ -1,8 +1,10 @@
 """Module for filesystem functions."""
 
+import os
 import shutil
+import stat
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 from inginious.common.base import load_json_or_yaml, write_json_or_yaml
 
@@ -66,3 +68,19 @@ def update_config_file(plugin_config: PluginConfig, config_path: Path) -> None:
     # Create backup of config before overwriting
     shutil.copy(p, f"{p}.bak")
     write_json_or_yaml(p, config)
+
+
+def is_writable(fp: Union[str, Path, os.PathLike]) -> bool:
+    return os.access(str(fp), os.W_OK)
+
+
+def chmod(fp: Union[str, Path, os.PathLike], mode: int) -> None:
+    """Changes access permissions for a given file."""
+    p = Path(fp)
+    p.chmod(mode)
+
+
+def chmod_x(fp: Union[str, Path, os.PathLike]) -> None:
+    """Equivalent to running `chmod +x <fp>`."""
+    p = Path(fp)
+    p.chmod(p.stat().st_mode | stat.S_IWRITE)

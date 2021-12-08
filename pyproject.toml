@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "inginious-coding-style"
-version = "1.5.0"
+version = "1.5.1"
 description = ""
 authors = ["Peder Hovdan Andresen <pedeha@stud.ntnu.no>"]
 readme = "README.md"

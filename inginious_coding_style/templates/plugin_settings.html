@@ -43,7 +43,28 @@
     </div>
 </div>
 
-<form id="codingstyle_settings_form" action="{{get_homepath()}}/admin/{{course.get_id()}}/settings/codingstyle" method="post">
+{% if config_path and not config_writable %}
+<div id="not_writable_alert">
+    <div class="alert alert-danger" role="alert">
+        The configuration file is not writable! Click the button to attempt to fix the problem.
+    </div>
+    <button
+        type="button"
+        class="btn btn-primary"
+        hx-confirm="This action will attempt to make the file writable by user running inginious-webapp. Are you sure you want to proceed?"
+        hx-post="{{get_homepath()}}/admin/{{course.get_id()}}/settings/codingstyle/fixconfig"
+        hx-vals='{"config_path": "{{config_path.absolute()}}"}'
+        hx-target="#not_writable_alert"
+
+    >Repair</button>
+</div>
+{% endif %}
+
+<form
+    id="codingstyle_settings_form"
+    action="{{get_homepath()}}/admin/{{course.get_id()}}/settings/codingstyle"
+    method="post"
+>
     <!-- Insert HTMX response here -->
     <div id="save-result">
     </div>
@@ -230,11 +251,11 @@
         <div class="col-sm-2"></div>
         <div class="col-sm-8">
             <button
-                _="on click go to the top of the body smoothly"
                 class="btn btn-primary btn-block"
                 type="submit"
                 hx-post="{{get_homepath()}}/admin/{{course.get_id()}}/settings/codingstyle"
                 hx-target="#save-result"
+                _="on click go to the top of the body smoothly"
             >
                 <i class="fa fa-download"></i> {{ _("Save changes") }}
             </button>

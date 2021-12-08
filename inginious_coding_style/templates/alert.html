@@ -1,0 +1,53 @@
+{# params:
+
+    # Message displayed in alert
+    message: str = "Success"
+
+    # Hyperscript to execute on alert
+    hyperscript: str = "on load wait 5s then transition opacity to 0 then remove me"
+
+    # Determine alert class based on success status
+    success: bool = False
+
+    # Alert div ID
+    id: Optional[str] = None
+
+    # Optionally pass in an exception
+    exception: Optional[Exception] = None
+
+    # overrides automatic class determined by `param: success`
+    class: Optional[str] = None
+#}
+
+
+<div
+    {% if not class %}
+        {% if success -%}
+            class="alert alert-success update-success"
+        {% else -%}
+            class="alert alert-danger"
+        {% endif -%}
+    {% else -%}
+        class="{{ class }}"
+    {% endif %}
+
+
+    {% if hyperscript -%}
+        {# a specified hyperscript arg always takes precedence #}
+        _="{{ hyperscript }}"
+    {% elif success %}
+        {# we default to a display then fade animation on success #}
+        _="{{ hyperscript | default('on load wait 5s then transition opacity to 0 then remove me', true)}}"
+    {% endif -%}
+
+    role="alert"
+
+    {% if id -%}
+        id="{{ id }}"
+    {%- endif -%}
+>
+{%- if success -%}
+    {{ message | default("Success", true) }}
+{%- else -%}
+    {{ message | default("Failure", true) }}
+{%- endif -%}{% if exception %} Reason: {e} {% endif %}</div>
