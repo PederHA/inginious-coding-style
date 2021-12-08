@@ -45,6 +45,9 @@ jobs:
           poetry install --no-interaction
       # END CACHE DEPENDENCIES
       - name: Generate artifacts for documentation
-        run: cd docs/scripts && /bin/bash run.sh
+        run: |
+          cd docs/scripts && \
+          poetry run python generate_config_schema.py && \
+          poetry run python generate_categories.py
       - name: Deploy to GitHub pages
-        run: cd docs && mkdocs gh-deploy --force
+        run: cd docs && poetry run mkdocs gh-deploy --force
