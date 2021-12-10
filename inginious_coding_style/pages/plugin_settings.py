@@ -362,6 +362,7 @@ class FixConfigPermissionsEndpoint(INGIniousAdminPage, BasePluginPage):
                     f"Failed to change permissions of {config_path}."
                     f"You need to manually ensure the user running inginious-webapp has write permissions for {config_path}."
                 ),
+                exception=e,
             )
         else:
             return self.template_helper.render(

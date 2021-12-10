@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "inginious-coding-style"
-version = "1.5.1"
-description = ""
+version = "1.5.2"
+description = "INGInious plugin for grading of coding style."
 authors = ["Peder Hovdan Andresen <pedeha@stud.ntnu.no>"]
 readme = "README.md"
 license = "AGPL-3.0-or-later"
