@@ -1,4 +1,4 @@
-{# params:
+{#- params:
 
     # Message displayed in alert
     message: str = "Success"
@@ -17,37 +17,35 @@
 
     # overrides automatic class determined by `param: success`
     class: Optional[str] = None
-#}
-
-
+-#}
 <div
     {% if not class %}
-        {% if success -%}
+        {% if success %}
             class="alert alert-success update-success"
-        {% else -%}
+        {% else %}
             class="alert alert-danger"
-        {% endif -%}
-    {% else -%}
+        {% endif %}
+    {% else %}
         class="{{ class }}"
     {% endif %}
 
-
-    {% if hyperscript -%}
+    {% if hyperscript %}
         {# a specified hyperscript arg always takes precedence #}
         _="{{ hyperscript }}"
     {% elif success %}
         {# we default to a display then fade animation on success #}
         _="{{ hyperscript | default('on load wait 5s then transition opacity to 0 then remove me', true)}}"
-    {% endif -%}
+    {% endif %}
 
     role="alert"
 
-    {% if id -%}
+    {% if id %}
         id="{{ id }}"
-    {%- endif -%}
+    {% endif %}
 >
-{%- if success -%}
-    {{ message | default("Success", true) }}
-{%- else -%}
-    {{ message | default("Failure", true) }}
-{%- endif -%}{% if exception %} Reason: {e} {% endif %}</div>
+    {%- if success -%}
+        {{ message | default("Success", true) }}
+    {%- else -%}
+        {{ message | default("Failure", true) }}
+    {%- endif -%}{% if exception %} Reason: {{ exception }} {%- endif -%}
+</div>

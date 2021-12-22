@@ -149,7 +149,7 @@
         <script>
             function removeElementById(id, name=null, prompt=true) {
                 name = name ? name : id
-                if (!prompt || confirm("Are you sure you want to remove the category " + name + "?")) {
+                if (!prompt || confirm(`Are you sure you want to remove the category '${name}'?`)) {
                     document.getElementById(id).remove();
                 }
 
