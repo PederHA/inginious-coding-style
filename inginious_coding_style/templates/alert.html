@@ -50,4 +50,4 @@
     {{ message | default("Success", true) }}
 {%- else -%}
     {{ message | default("Failure", true) }}
-{%- endif -%}{% if exception %} Reason: {e} {% endif %}</div>
+{%- endif -%}{% if exception %} Reason: {{ exception }} {% endif %}</div>
