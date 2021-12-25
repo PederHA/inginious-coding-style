@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 from typing import Any, Dict, List, TypedDict, Union
 
@@ -65,3 +66,6 @@ class PluginUserTask(INGIniousUserTask):
 
     grade_mean: float
     grade_base: float
+
+# Filesystem
+PathLike = Union[str, os.PathLike]
