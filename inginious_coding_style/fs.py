@@ -8,6 +8,7 @@ from typing import Optional, Union
 
 from inginious.common.base import load_json_or_yaml, write_json_or_yaml
 
+from ._types import PathLike
 from .config import PluginConfig
 
 
@@ -70,11 +71,19 @@ def update_config_file(plugin_config: PluginConfig, config_path: Path) -> None:
     write_json_or_yaml(p, config)
 
 
-def is_writable(fp: Union[str, Path, os.PathLike]) -> bool:
+def is_writable(fp: PathLike) -> bool:
     return os.access(str(fp), os.W_OK)
 
 
-def chmod(fp: Union[str, Path, os.PathLike], mode: int) -> None:
+def is_executable(fp: PathLike) -> bool:
+    return os.access(str(fp), os.X_OK)
+
+
+def is_readable(fp: PathLike) -> bool:
+    return os.access(str(fp), os.R_OK)
+
+
+def chmod(fp: PathLike, mode: int) -> None:
     """Changes access permissions for a given file."""
     p = Path(fp)
     p.chmod(mode)
