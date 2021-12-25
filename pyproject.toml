@@ -34,6 +34,19 @@ pytest = "^6.2.4"
 pytest-lazy-fixture = "^0.6.3"
 hypothesis = "^6.14.5"
 pytest-cov = "^2.12.1"
+poethepoet = "^0.11.0"
+
+[tool.poe.tasks]
+# Testing tasks
+_cov = "pytest --cov-report html --cov=inginious_coding_style tests/"
+_opencov = "open -a 'Google Chrome' htmlcov/index.html"
+# Release tasks
+_build = "poetry build"
+_publish = "poetry publish"
+# Public tasks
+test = "pytest"
+cov = ["_cov", "_opencov"]
+release = ["test", "_build", "_publish"]
 
 [build-system]
 requires = ["poetry>=0.12"]
