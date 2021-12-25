@@ -1,5 +1,6 @@
 import copy
 from datetime import datetime
+from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
@@ -243,3 +244,10 @@ def template_helper(plugin_manager, mock_user_manager, get_homepath):
 @pytest.fixture
 def mock_inginious_page():
     yield Mock(spec=INGIniousPage)
+
+
+@pytest.fixture(scope="function")
+def tmp_config_file(tmp_path: Path) -> None:
+    conf_file = tmp_path / "configuration.yaml"
+    conf_file.write_text("some text goes here")
+    return conf_file
