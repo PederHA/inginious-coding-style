@@ -3,11 +3,12 @@ from hypothesis import given
 from hypothesis import strategies as st
 from pydantic import ValidationError
 
+from inginious_coding_style.config import PluginConfig
 from inginious_coding_style.grades import (CodingStyleGrades, GradingCategory,
-                                           get_grades)
+                                           add_config_categories, get_grades)
 
 
-def test_get_grades(grades):
+def test_get_grades(grades: dict):
     assert get_grades(grades) == CodingStyleGrades(__root__=grades)
     assert get_grades(grades) == CodingStyleGrades.parse_obj(grades)
     g = get_grades(grades)
@@ -19,7 +20,7 @@ def test_get_grades(grades):
 # when using fixtures together with hypothesis?
 class TestGrades:
     @given(grade=st.integers())
-    def test_grades_fuzz(self, grade, grades):
+    def test_grades_fuzz(self, grade: int, grades: dict):
         grades["comments"]["grade"] = grade
         if grade < 0 or grade > 100:
             with pytest.raises(ValidationError):
@@ -31,7 +32,7 @@ class TestGrades:
 
 class TestFeedback:
     @given(feedback=st.text())
-    def test_feedback_fuzz(self, feedback, grades):
+    def test_feedback_fuzz(self, feedback: str, grades: dict):
         grades["comments"]["feedback"] = feedback
         get_grades(grades)
 
@@ -44,7 +45,7 @@ def test_remove_category(grades_pydantic: CodingStyleGrades):
     assert "idiomaticity" not in grades_pydantic.grades
 
     with pytest.raises(TypeError):
-        assert grades_pydantic.remove_category(1)
+        assert grades_pydantic.remove_category(1)  # type: ignore
 
 
 def test_delete_grades(grades_pydantic: CodingStyleGrades):
@@ -83,7 +84,7 @@ def test_missing_grading_category_name():
     assert category.name == "Comments"
 
 
-def test_grades_contains(grades_pydantic):
+def test_grades_contains(grades_pydantic: CodingStyleGrades):
     """Tests CodingStyleGrades.__contains__()"""
     for id in ["comments", "modularity", "structure", "idiomaticity"]:
         assert id in grades_pydantic
@@ -92,4 +93,20 @@ def test_grades_contains(grades_pydantic):
         assert grade in grades_pydantic
 
     # test invalid type
-    assert 2 not in grades_pydantic
+    assert 2 not in grades_pydantic  # type: ignore
+
+
+def test_add_config_categories(config_pydantic_full: PluginConfig) -> None:
+    pre_add_len = len(config_pydantic_full.enabled)
+    grades = get_grades(
+        {
+            "elegance": GradingCategory(
+                id="elegance",
+                name="Elegance",
+                description="Elegance of code",
+            )
+        }
+    )
+    categories = add_config_categories(grades, config_pydantic_full)
+    assert "elegance" in categories
+    assert len(categories) == pre_add_len + 1

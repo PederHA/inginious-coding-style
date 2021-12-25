@@ -14,6 +14,11 @@ def test_get_config_path() -> None:
     )
 
 
+def test_get_config_path_not_exists() -> None:
+    p = get_config_path("tests/resources/configurationz.yaml")
+    assert p is None
+
+
 def test_is_readable(tmp_config_file: Path) -> None:
     tmp_config_file.chmod(0o111)
     assert not is_readable(tmp_config_file)

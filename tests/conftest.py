@@ -1,6 +1,7 @@
 import copy
 from datetime import datetime
 from pathlib import Path
+from typing import Any, Callable, Dict, cast
 from unittest.mock import Mock
 
 import pytest
@@ -18,15 +19,16 @@ from inginious.frontend.template_helper import TemplateHelper
 from inginious.frontend.user_manager import UserManager
 from pymongo.database import Database
 
-from inginious_coding_style.config import get_config
-from inginious_coding_style.grades import get_grades
-from inginious_coding_style.submission import get_submission
+from inginious_coding_style._types import INGIniousSubmission
+from inginious_coding_style.config import PluginConfig, get_config
+from inginious_coding_style.grades import CodingStyleGrades, get_grades
+from inginious_coding_style.submission import Submission, get_submission
 
 
 # TODO: fix scope / use generator fixture / create context manager
 @pytest.fixture(scope="class")
-def grades():
-    yield {
+def grades() -> dict:
+    return {
         "comments": {
             "id": "comments",
             "name": "Comments",
@@ -59,18 +61,18 @@ def grades():
 
 
 @pytest.fixture
-def grades_pydantic(grades):
+def grades_pydantic(grades: dict) -> CodingStyleGrades:
     return get_grades(grades)
 
 
 @pytest.fixture
-def coding_style_grades_dict(grades):
-    yield {"coding_style_grades": grades}
+def coding_style_grades_dict(grades: dict) -> Dict[str, dict]:
+    return {"coding_style_grades": grades}
 
 
 @pytest.fixture(scope="function")
 def submission_nogrades() -> dict:
-    yield {
+    return {
         "_id": ObjectId("123456789abc123456789abc"),
         "courseid": "mycourse",
         "taskid": "mytask",
@@ -97,40 +99,43 @@ def submission_nogrades() -> dict:
 
 
 @pytest.fixture
-def submission_grades(submission_nogrades, coding_style_grades_dict):
+def submission_grades(
+    submission_nogrades: dict,
+    coding_style_grades_dict: Dict[str, dict],
+) -> INGIniousSubmission:
     sub = copy.deepcopy(submission_nogrades)
     sub["custom"] = coding_style_grades_dict
-    yield sub
+    return cast(INGIniousSubmission, sub)
 
 
 @pytest.fixture
-def submission_pydantic_grades(submission_grades):
-    yield get_submission(submission_grades)
+def submission_pydantic_grades(submission_grades: INGIniousSubmission) -> Submission:
+    return get_submission(submission_grades)
 
 
 @pytest.fixture(scope="session")
-def course():
+def course() -> Course:
     return Mock(spec=Course)
 
 
 @pytest.fixture(scope="session")
-def task():
+def task() -> Task:
     return Mock(spec=Task)
 
 
 @pytest.fixture
-def config_raw_minimal():
+def config_raw_minimal() -> dict:
     """A minimal plugin config.
     Represented as a dict parsed by the INGInious YAML parser.
     """
-    yield {
+    return {
         "plugin_module": "inginious_coding_style",
         "name": "INGInious Coding Style",
     }
 
 
 @pytest.fixture
-def config_raw_full(config_raw_minimal: dict):
+def config_raw_full(config_raw_minimal: dict) -> dict:
     """A plugin config with all options used.
     Represented as a dict parsed by the INGInious YAML parser.
     """
@@ -159,54 +164,54 @@ def config_raw_full(config_raw_minimal: dict):
         }
     )
     config_raw_minimal["enabled"].append("custom_category")
-    yield config_raw_minimal
+    return config_raw_minimal
 
 
 @pytest.fixture
-def config_pydantic_full(config_raw_full):
-    yield get_config(config_raw_full)
+def config_pydantic_full(config_raw_full: dict) -> PluginConfig:
+    return get_config(config_raw_full)
 
 
 @pytest.fixture(scope="session")
-def get_homepath():
-    yield lambda a: "/"
+def get_homepath() -> Callable[[bool], str]:
+    return lambda a: "/"
 
 
 @pytest.fixture(scope="session")
-def flask_app(get_homepath):
+def flask_app(get_homepath) -> Flask:
     app = Flask(__name__)
-    app.get_homepath = get_homepath
-    yield app
+    setattr(app, "get_homepath", get_homepath)
+    return app
 
 
 @pytest.fixture(scope="session")
-def mock_database():
-    yield Mock(spec=Database)
+def mock_database() -> Database:
+    return Mock(spec=Database)
 
 
 @pytest.fixture(scope="session")
-def mock_client():
-    yield Mock(spec=Client)
+def mock_client() -> Client:
+    return Mock(spec=Client)
 
 
 @pytest.fixture(scope="session")
-def mock_course_factory():
-    yield Mock(spec=CourseFactory)
+def mock_course_factory() -> CourseFactory:
+    return Mock(spec=CourseFactory)
 
 
 @pytest.fixture(scope="session")
-def mock_task_factory():
-    yield Mock(spec=TaskFactory)
+def mock_task_factory() -> TaskFactory:
+    return Mock(spec=TaskFactory)
 
 
 @pytest.fixture(scope="session")
-def mock_user_manager():
-    yield Mock(spec=UserManager)
+def mock_user_manager() -> UserManager:
+    return Mock(spec=UserManager)
 
 
 @pytest.fixture(scope="session")
-def mock_submission_manager():
-    yield Mock(spec=WebAppSubmissionManager)
+def mock_submission_manager() -> WebAppSubmissionManager:
+    return Mock(spec=WebAppSubmissionManager)
 
 
 @pytest.fixture(scope="session")
@@ -218,7 +223,7 @@ def plugin_manager(
     mock_database: Database,
     mock_user_manager: UserManager,
     mock_submission_manager: WebAppSubmissionManager,
-):
+) -> PluginManager:
     p = PluginManager()
     p.load(
         mock_client,
@@ -230,24 +235,24 @@ def plugin_manager(
         mock_submission_manager,
         [],
     )
-    yield p
+    return p
 
 
 @pytest.fixture(scope="session")
-def template_helper(plugin_manager, mock_user_manager, get_homepath):
+def template_helper(plugin_manager, mock_user_manager, get_homepath) -> TemplateHelper:
     t = TemplateHelper(plugin_manager, mock_user_manager)
     t.add_to_template_globals("get_homepath", get_homepath)
     t.add_to_template_globals("_", lambda a: "i18n")
-    yield t
+    return t
 
 
 @pytest.fixture
-def mock_inginious_page():
-    yield Mock(spec=INGIniousPage)
+def mock_inginious_page() -> INGIniousPage:
+    return Mock(spec=INGIniousPage)
 
 
 @pytest.fixture(scope="function")
-def tmp_config_file(tmp_path: Path) -> None:
+def tmp_config_file(tmp_path: Path) -> Path:
     conf_file = tmp_path / "configuration.yaml"
     conf_file.write_text("some text goes here")
     return conf_file

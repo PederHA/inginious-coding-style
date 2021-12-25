@@ -4,7 +4,7 @@ import os
 import shutil
 import stat
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
 
 from inginious.common.base import load_json_or_yaml, write_json_or_yaml
 

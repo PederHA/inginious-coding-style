@@ -1,14 +1,14 @@
 from typing import TYPE_CHECKING
-from inginious_coding_style.config import get_config, DEFAULT_CATEGORIES
+
 from inginious.common import custom_yaml
 
-from typing import TYPE_CHECKING
+from inginious_coding_style.config import DEFAULT_CATEGORIES, get_config
 
 if TYPE_CHECKING:
-    from typing import OrderedDict, Any
+    from typing import Any, OrderedDict
 
 
-def test_get_config_minimal(config_raw_minimal):
+def test_get_config_minimal(config_raw_minimal: dict):
     config = get_config(config_raw_minimal)
     for category in DEFAULT_CATEGORIES.values():
         assert category.id in config.enabled
@@ -16,7 +16,7 @@ def test_get_config_minimal(config_raw_minimal):
     assert config_raw_minimal["name"] == config.name
 
 
-def test_get_config_full(config_raw_full):
+def test_get_config_full(config_raw_full: dict):
     config = get_config(config_raw_full)
     for category in DEFAULT_CATEGORIES.values():
         assert category.id in config.enabled
@@ -34,7 +34,7 @@ def test_get_config_full(config_raw_full):
     )
 
 
-def test_get_config_disabled_custom_category(config_raw_full):
+def test_get_config_disabled_custom_category(config_raw_full: dict):
     """Tests that a custom category is not enabled if it is not included in `config["enabled"]`."""
     # NOTE: This just tests expected behavior, but whether or not this SHOULD
     # be the expected behavior is a very valid question.
