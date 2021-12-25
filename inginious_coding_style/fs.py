@@ -80,7 +80,8 @@ def chmod(fp: Union[str, Path, os.PathLike], mode: int) -> None:
     p.chmod(mode)
 
 
-def chmod_x(fp: Union[str, Path, os.PathLike]) -> None:
-    """Equivalent to running `chmod +x <fp>`."""
+def chmod_rw(fp: PathLike) -> None:
+    """Equivalent to running `chmod +rw <fp>`."""
     p = Path(fp)
     p.chmod(p.stat().st_mode | stat.S_IWRITE)
+    p.chmod(p.stat().st_mode | stat.S_IREAD)

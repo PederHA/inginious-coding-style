@@ -20,7 +20,7 @@ from werkzeug.exceptions import BadRequest
 
 from .._types import INGIniousUserTask
 from ..config import PluginConfig, SubmissionQuerySettings, TaskListBars
-from ..fs import chmod_x, get_config_path, is_writable, update_config_file
+from ..fs import chmod_rw, get_config_path, is_writable, update_config_file
 from ..grades import GradingCategory
 from ..mixins import AdminPageMixin, SubmissionMixin
 from .base import BasePluginPage
@@ -353,7 +353,7 @@ class FixConfigPermissionsEndpoint(INGIniousAdminPage, BasePluginPage):
             )
 
         try:
-            chmod_x(config_path)
+            chmod_rw(config_path)
         except OSError as e:
             return self.template_helper.render(
                 "alert.html",
