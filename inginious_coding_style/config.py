@@ -11,8 +11,8 @@ def none_returns_defaults(value: Any, field: ModelField) -> Any:
     """Custom validator that attempts to call the field's default factory
     or returns the field's default value if `None` is passed in.
 
-    Handles cases where the contents of a config section is deleted, but
-    its header remains.
+    Handles cases where the value of a config section is deleted, but
+    its key remains.
 
     If the field does not have defaults, we let Pydantic handle the
     resulting validation error.
@@ -20,7 +20,7 @@ def none_returns_defaults(value: Any, field: ModelField) -> Any:
     Example:
     ------
 
-    We go from this:
+    If we go from this:
     ```yml
     enabled:
         - comments
@@ -28,13 +28,12 @@ def none_returns_defaults(value: Any, field: ModelField) -> Any:
         - structure
         - idiomaticity
     ```
-
     To this:
     ```yml
     enabled:
     ```
 
-    In this case, the value of `enabled` is interpreted as `None` by
+    In the example above, the value of `enabled` is interpreted as `None` by
     the INGInious YAML parser. When that happens, this function serves
     as a failsafe, so that the field's defaults kick in instead of leading
     to a validation error because of an unexpected None value.
